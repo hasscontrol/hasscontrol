@@ -1,0 +1,21 @@
+<resources>
+    <properties>
+        <property id="host" type="string">https://home.karl-ek.se</property>
+        <!-- <property id="host" type="string">http://hassio.local:8123</property> -->
+        <property id="scenes" type="string">good_night,movie,good_bye,welcome</property>
+    </properties>
+
+    <strings>
+       <string id="host_title">Host</string>
+       <string id="scenes_title">Scenes ("scene1,scene2,scene3")</string>
+    </strings>
+
+    <settings>
+        <setting propertyKey="@Properties.host" title="@Strings.host_title">
+            <settingConfig type="url" />
+        </setting>
+        <setting propertyKey="@Properties.scenes" title="@Strings.scenes_title">
+            <settingConfig type="alphaNumeric" />
+        </setting>
+    </settings>
+</resources>
