@@ -67,7 +67,10 @@ class ViewController {
     Ui.requestUpdate();
   }
 
+
+
   function removeLoader() {
+    System.println("About to remove loader");
     if (isShowingLoader()) {
       // if loader is about to close too soon, we need to delay it
       if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
@@ -76,12 +79,23 @@ class ViewController {
       }
 
       Ui.popView(Ui.SLIDE_BLINK);
+    } else {
+      System.println("Loader is not visible");
+    }
+
+    _loaderActive = null;
+  }
+
+  function removeLoaderImmediate() {
+    if (isShowingLoader()) {
+      Ui.popView(Ui.SLIDE_BLINK);
     }
 
     _loaderActive = null;
   }
 
   function showError(message) {
+    System.println("About to show error");
     if (_errorView.isActive()) {
       Ui.popView(Ui.SLIDE_IMMEDIATE);
     }

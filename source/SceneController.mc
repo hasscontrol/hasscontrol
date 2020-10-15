@@ -119,8 +119,6 @@ class SceneController {
   }
 
   function onActivateComplete(error, data) {
-    App.getApp().viewController.removeLoader();
-
     var errorMessage = null;
 
     if (error != null && error["errorCode"] == HassClient.ERROR_SERVER_NOT_REACHABLE) {
@@ -129,6 +127,8 @@ class SceneController {
       errorMessage = "Authentication\nfailed";
     } else if (error != null && error["errorCode"] == HassClient.ERROR_RESOURCE_NOT_FOUND) {
       errorMessage = "Resource not\nfound";
+    } else if (error != null && error["errorCode"] == HassClient.ERROR_TOKEN_REVOKED) {
+      errorMessage = "Login Revoked";
     } else if (error != null) {
       errorMessage = "Unknown error\noccurred";
       errorMessage += "\n" + error["type"];
@@ -137,7 +137,10 @@ class SceneController {
 
     if (errorMessage != null) {
       System.println(error);
+      App.getApp().viewController.removeLoaderImmediate();
       App.getApp().viewController.showError(errorMessage);
+    } else {
+      App.getApp().viewController.removeLoader();
     }
   }
 

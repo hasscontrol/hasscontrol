@@ -7,12 +7,12 @@ class ErrorDelegate extends Ui.BehaviorDelegate {
     }
 
     function onSelect() {
-        App.getApp().removeError();
+        App.getApp().viewController.removeError();
         return true;
     }
 
     function onBack() {
-        App.getApp().removeError();
+        App.getApp().viewController.removeError();
         return true;
     }
 }

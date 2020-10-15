@@ -2,10 +2,11 @@ using Toybox.Communications as Comm;
 using Toybox.Application as App;
 using Toybox.Time;
 
+const CLIENT_ID = "https://hasscontrol";
+const REDIRECT_URL = CLIENT_ID + "/hass/auth_callback";
+
 class HassAuthClient {
     hidden var _hassUrl;
-    hidden var _clientId;
-    hidden var _redirectUrl;
     hidden var _refreshToken;
     hidden var _accessToken;
     hidden var _expires;
@@ -16,44 +17,76 @@ class HassAuthClient {
     static var ERROR_UNKNOWN = 0;
     static var ERROR_SERVER_NOT_REACHABLE = 1;
     static var ERROR_NOT_AUTHORIZED = 2;
+    static var ERROR_TOKEN_REVOKED = 3;
 
     function initialize() {
         Comm.registerForOAuthMessages(method(:onReceiveCode));
 
         _hassUrl = Application.Properties.getValue("host");
 
-        var refreshToken = Application.Storage.getValue("refresh_token");
-        var accessToken = Application.Storage.getValue("access_token");
-        var expires = Application.Storage.getValue("expires");
-
-        _clientId = "https://localhost";
-        _redirectUrl = _clientId + "/hass/auth_callback";
         _isLoggingIn = false;
         _isFetchingAccessToken = false;
         _tokenCallbacks = new [0];
+        _refreshToken = null;
+        _accessToken = null;
+        _expires = null;
 
         var hasToken = (refreshToken != null);
         System.println("Has stored refreshToken: " + hasToken);
+    }
 
+    function getAccessToken() {
+        var accessToken = _accessToken;
 
-        // We have to create new references to the objects for Storage
-        // They have week references
-        if (refreshToken != null) {
-            _refreshToken = refreshToken.toString();
-        } else {
-            _refreshToken = null;
+        if (accessToken == null) {
+            accessToken = Application.Storage.getValue("access_token");
         }
 
-        if (accessToken != null) {
-            _accessToken = accessToken.toString();
-        } else {
-            _accessToken = null;
+        return accessToken;
+    }
+
+    function setAccessToken(token) {
+        _accessToken = token;
+        Application.Storage.setValue("access_token", token);
+    }
+
+    function getRefreshToken() {
+        var refreshToken = _refreshToken;
+
+        if (refreshToken == null) {
+            refreshToken = Application.Storage.getValue("refresh_token");
         }
 
+        return refreshToken;
+    }
+
+    function setRefreshToken(token) {
+        _refreshToken = token;
+        Application.Storage.setValue("refresh_token", token);
+    }
+
+    function getExpires() {
+        var expires = _expires;
+
+        if (expires == null) {
+            expires = Application.Storage.getValue("expires");
+
+            if (expires != null) {
+                expires = new Time.Moment(expires);
+                _expires = expires;
+            }
+        }
+
+        return expires;
+    }
+
+    function setExpires(expires) {
         if (expires != null) {
-            _expires = new Time.Moment(expires);
+            _expires = expires;
+            Application.Storage.setValue("expires", _expires.value());
         } else {
             _expires = null;
+            Application.Storage.setValue("expires", null);
         }
     }
 
@@ -82,15 +115,20 @@ class HassAuthClient {
         var areWeLoggingIn = false;
         _setIsLoggingIn(areWeLoggingIn);
 
-        if (code == 200) {
-            _accessToken = data["access_token"];
-            _refreshToken = data["refresh_token"];
-            _expires = Time.now().add(new Time.Duration(data["expires_in"]));
-            _isFetchingAccessToken = false;
+        _isFetchingAccessToken = false;
 
-            Application.Storage.setValue("refresh_token", _refreshToken);
-            Application.Storage.setValue("access_token", _accessToken);
-            Application.Storage.setValue("expires", _expires.value());
+        if (code == 200) {
+            var expires = Time.now().add(new Time.Duration(data["expires_in"]));
+
+            setExpires(expires);
+            setAccessToken(data["access_token"]);
+
+            if (data["refresh_token"]) {
+                System.println("Saving refresh token");
+                setRefreshToken(data["refresh_token"]);
+            }
+
+            System.println("Received tokens from home assistant");
 
             fireTokenCallbacks(null);
         } else {
@@ -98,9 +136,11 @@ class HassAuthClient {
 
             if (code == 401) {
                 error = { "errorCode" => ERROR_NOT_AUTHORIZED };
-                clearAccessToken();
             } else if (code == 404) {
                 error = { "errorCode" => ERROR_SERVER_NOT_REACHABLE };
+            } else if (code == 400) {
+                error = { "errorCode" => ERROR_TOKEN_REVOKED };
+                logout();
             }
 
             error["responseCode"] = code;
@@ -114,35 +154,28 @@ class HassAuthClient {
     }
 
     function hasExpired() {
-        if (_accessToken == null || _expires == null) {
+        // add 1 minute as buffer
+        var now = Time.now().add(new Time.Duration(1790));
+        var expires = getExpires();
+
+        if (expires == null) {
             return true;
         }
 
-        // add 1 minute as buffer
-        var now = Time.now().add(new Time.Duration(60));
-
-        if (_expires.lessThan(now)) {
+        if (expires.lessThan(now)) {
             return true;
         }
 
         return false;
     }
 
-    function getAccessToken() {
-        return _accessToken;
-    }
-
-    function clearAccessToken() {
-        _accessToken = null;
-    }
-
-    function refreshToken() {
+    function refreshToken(force) {
         if (_isLoggingIn) {
             return;
         }
 
         if (isLoggedIn() == false) {
-            System.println("Refreshing token, not logged in");
+            System.println("Not logged in, let's log in!");
             login(null);
             return;
         }
@@ -151,14 +184,17 @@ class HassAuthClient {
             return;
         }
 
-        if (hasExpired() == true) {
+        if (hasExpired() == true || force == true) {
+            System.println("AccessToken has expired, lets refresh!");
+            var refreshToken = getRefreshToken();
+
             _isFetchingAccessToken = true;
             Comm.makeWebRequest(
                 _hassUrl + "/auth/token",
                 {
                     "grant_type" => "refresh_token",
-                    "client_id" => _clientId,
-                    "refresh_token" => _refreshToken
+                    "client_id" => CLIENT_ID,
+                    "refresh_token" => refreshToken
                 },
                 {
                     :method => Comm.HTTP_REQUEST_METHOD_POST
@@ -166,6 +202,7 @@ class HassAuthClient {
                 method(:onReceiveTokens)
             );
         } else {
+            System.println("AccessToken still valid :)");
             fireTokenCallbacks(null);
         }
     }
@@ -178,7 +215,7 @@ class HassAuthClient {
                 _hassUrl + "/auth/token",
                 {
                     "grant_type" => "authorization_code",
-                    "client_id" => _clientId,
+                    "client_id" => CLIENT_ID,
                     "code" => code
                 },
                 {
@@ -192,6 +229,7 @@ class HassAuthClient {
     function onReceiveCode(value) {
         // App.getApp().viewController.showLoginView(false);
         if (value.data["code"] != null) {
+            System.println("Received auth code from home assistant");
             getTokensFromCode(value.data["code"]);
         } else {
             var error = { "errorCode" => ERROR_UNKNOWN };
@@ -222,8 +260,8 @@ class HassAuthClient {
     }
 
     function isLoggedIn() {
-        if (_refreshToken != null) {
-            System.println("refresh token is not null!");
+        var refreshToken = getRefreshToken();
+        if (refreshToken != null) {
             return true;
         }
 
@@ -237,24 +275,32 @@ class HassAuthClient {
 
         if (isLoggedIn() == true) {
             System.println("Trying to login when we are already logged in");
-            refreshToken();
+            refreshToken(false);
             return;
         }
 
-        var areWeLoggingIn = false;
+        var areWeLoggingIn = true;
         _setIsLoggingIn(areWeLoggingIn);
 
+        System.println("About to fire an oauth request!");
         Comm.makeOAuthRequest(
             _hassUrl + "/auth/authorize",
             {
-                "client_id" => _clientId,
+                "client_id" => CLIENT_ID,
                 "response_type"=>"code",
                 "scope"=>"public",
-                "redirect_uri"=> _redirectUrl
+                "redirect_uri"=> REDIRECT_URL
             },
-            _redirectUrl,
+            REDIRECT_URL,
             Comm.OAUTH_RESULT_TYPE_URL,
             {"code"=>"code"}
         );
+    }
+
+    function logout() {
+        System.println("Logging out!");
+        setAccessToken(null);
+        setRefreshToken(null);
+        setExpires(null);
     }
 }

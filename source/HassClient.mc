@@ -11,6 +11,7 @@ class HassClient {
     static var ERROR_SERVER_NOT_REACHABLE = 1;
     static var ERROR_NOT_AUTHORIZED = 2;
     static var ERROR_RESOURCE_NOT_FOUND = 3;
+    static var ERROR_TOKEN_REVOKED = 4;
 
     function initialize() {
         _hassUrl = Application.Properties.getValue("host");
@@ -35,7 +36,8 @@ class HassClient {
 
         if (responseCode == 401) {
             error = { "errorCode" => ERROR_NOT_AUTHORIZED };
-            _auth.clearAccessToken();
+            _auth.setAccessToken(null);
+            _auth.setExpires(null);
         } else if (responseCode == 404 && data != null) {
             error = { "errorCode" => ERROR_RESOURCE_NOT_FOUND };
         } else if (responseCode == 404) {
@@ -65,7 +67,7 @@ class HassClient {
         var params = {
             "entity_id" => "scene." + _sceneToActivate
         };
-
+        System.println("Send activate scene request");
         Comm.makeWebRequest(
             url,
             params,
@@ -88,10 +90,12 @@ class HassClient {
         if (err != null) {
             var error = { "errorCode" => ERROR_UNKNOWN };
 
-            if (err == HassAuthClient.ERROR_SERVER_NOT_REACHABLE) {
+            if (err["errorCode"] == HassAuthClient.ERROR_SERVER_NOT_REACHABLE) {
                 error = { "errorCode" => ERROR_SERVER_NOT_REACHABLE };
-            } else if (err == HassAuthClient.ERROR_NOT_AUTHORIZED) {
+            } else if (err["errorCode"] == HassAuthClient.ERROR_NOT_AUTHORIZED) {
                 error = { "errorCode" => ERROR_NOT_AUTHORIZED };
+            } else if (err["errorCode"] == HassAuthClient.ERROR_TOKEN_REVOKED) {
+                error = { "errorCode" => ERROR_TOKEN_REVOKED };
             }
 
             error["responseCode"] = err["responseCode"];
@@ -114,6 +118,6 @@ class HassClient {
             "cb" => cb
         });
 
-        _auth.refreshToken();
+        _auth.refreshToken(false);
     }
 }
