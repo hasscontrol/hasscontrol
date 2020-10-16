@@ -10,6 +10,11 @@ class SceneController {
     client = hassClient;
 
     scenes = new [0];
+    refreshScenes();
+  }
+
+  function refreshScenes() {
+    scenes = new [0];
 
     var sceneString = Application.Properties.getValue("scenes");
 
@@ -40,6 +45,10 @@ class SceneController {
     } else {
       _focusedScene = null;
     }
+  }
+
+  function onSettingsChanged() {
+    refreshScenes();
   }
 
   function calcNextScene() {
@@ -121,7 +130,11 @@ class SceneController {
   function onActivateComplete(error, data) {
     var errorMessage = null;
 
-    if (error != null && error["errorCode"] == HassClient.ERROR_SERVER_NOT_REACHABLE) {
+    if (error != null && error["errorCode"] == HassClient.ERROR_PHONE_NOT_CONNECTED) {
+      errorMessage = "Phone not\nconnected";
+    } else if (error != null && error["errorCode"] == HassClient.ERROR_INVALID_HOST) {
+      errorMessage = "Check settings\ninvalid host";
+    } else if (error != null && error["errorCode"] == HassClient.ERROR_SERVER_NOT_REACHABLE) {
       errorMessage = "Home Assistant\nnot reachable";
     } else if (error != null && error["errorCode"] == HassClient.ERROR_NOT_AUTHORIZED) {
       errorMessage = "Authentication\nfailed";

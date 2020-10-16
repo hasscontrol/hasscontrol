@@ -11,8 +11,7 @@ class LoginDelegate extends Ui.BehaviorDelegate {
     }
 
     function onBack() {
-        // App.getApp().removeError();
-        System.println("Should go back!");
+        App.getApp().viewController.showLoginView(false);
         return true;
     }
 }

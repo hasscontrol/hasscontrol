@@ -1,5 +1,6 @@
 using Toybox.Communications as Comm;
 using Toybox.Application as App;
+using Toybox.StringUtil;
 using Toybox.Time;
 
 const CLIENT_ID = "https://hasscontrol";
@@ -19,10 +20,10 @@ class HassAuthClient {
     static var ERROR_NOT_AUTHORIZED = 2;
     static var ERROR_TOKEN_REVOKED = 3;
 
-    function initialize() {
+    function initialize(host) {
         Comm.registerForOAuthMessages(method(:onReceiveCode));
 
-        _hassUrl = Application.Properties.getValue("host");
+        _hassUrl = host;
 
         _isLoggingIn = false;
         _isFetchingAccessToken = false;
@@ -33,6 +34,15 @@ class HassAuthClient {
 
         var hasToken = (refreshToken != null);
         System.println("Has stored refreshToken: " + hasToken);
+    }
+
+    function setHost(host) {
+        if (_hassUrl == host) {
+            return;
+        }
+
+        logout();
+        _hassUrl = host;
     }
 
     function getAccessToken() {

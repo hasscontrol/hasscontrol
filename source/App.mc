@@ -18,8 +18,12 @@ class App extends Application.AppBase {
     _sceneDelegate = new SceneDelegate(sceneController);
   }
 
-  // TODO: Check if app is connected
-  // TODO: Show login window
+  /*
+   * TODO:
+   * - scene skroll åt båda håll när man bara har 2 scener
+   * - Konvertera error response till en klass
+   *
+  */
 
   function launchSceneView() {
     Ui.pushView(
@@ -29,12 +33,16 @@ class App extends Application.AppBase {
     );
   }
 
+  function onSettingsChanged() {
+    hassClient.onSettingsChanged();
+    sceneController.onSettingsChanged();
+
+    Ui.requestUpdate();
+  }
+
   function onStart(state) {}
 
-  // onStop() is called when your application is exiting
-  function onStop(state) {
-
-  }
+  function onStop(state) {}
 
   // Return the initial view of your application here
   function getInitialView() {
