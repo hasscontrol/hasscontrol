@@ -52,7 +52,7 @@ class SceneController {
   }
 
   function calcNextScene() {
-    if (scenes.size() < 3) {
+    if (_focusedScene == null) {
       return null;
     }
 
@@ -66,7 +66,7 @@ class SceneController {
   }
 
   function calcPreviousScene() {
-    if (scenes.size() < 2) {
+    if (_focusedScene == null) {
       return null;
     }
 
@@ -87,13 +87,13 @@ class SceneController {
   }
 
   function getNextScene() {
-    if (_focusedScene == null) {
-      return null;
-    }
-
     var nextScene = calcNextScene();
 
     if (nextScene == null) {
+      return null;
+    }
+
+    if (nextScene < _focusedScene) {
       return null;
     }
 
@@ -101,15 +101,16 @@ class SceneController {
   }
 
   function getPreviousScene() {
-    if (_focusedScene == null) {
-      return null;
-    }
-
     var previousScene = calcPreviousScene();
 
     if (previousScene == null) {
       return null;
     }
+
+    if (previousScene > _focusedScene) {
+      return null;
+    }
+
     return scenes[previousScene];
   }
 

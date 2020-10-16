@@ -1,13 +1,12 @@
 <resources>
     <properties>
-        <property id="host" type="string">https://home.karl-ek.se</property>
-        <!-- <property id="host" type="string">http://hassio.local:8123</property> -->
-        <property id="scenes" type="string">bedroom_on,bedroom_off</property>
+        <property id="host" type="string">http://hassio.local:8123</property>
+        <property id="scenes" type="string">scene1,scene2,scene3</property>
     </properties>
 
     <strings>
-       <string id="host_title">Host</string>
-       <string id="scenes_title">Scenes ("scene1,scene2,scene3")</string>
+       <string id="host_title">Host: (http://hassio.local:8123)</string>
+       <string id="scenes_title">Scenes: (scene1,scene2,scene3)</string>
     </strings>
 
     <settings>

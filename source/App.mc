@@ -20,7 +20,8 @@ class App extends Application.AppBase {
 
   /*
    * TODO:
-   * - scene skroll åt båda håll när man bara har 2 scener
+   * - ny logga
+   * - glance view = base view
    * - Konvertera error response till en klass
    *
   */
