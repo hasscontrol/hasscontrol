@@ -2,7 +2,7 @@
     <properties>
         <property id="host" type="string">https://home.karl-ek.se</property>
         <!-- <property id="host" type="string">http://hassio.local:8123</property> -->
-        <property id="scenes" type="string">good_night,movie,good_bye,welcome</property>
+        <property id="scenes" type="string">bedroom_on,bedroom_off</property>
     </properties>
 
     <strings>

@@ -155,7 +155,7 @@ class HassAuthClient {
 
     function hasExpired() {
         // add 1 minute as buffer
-        var now = Time.now().add(new Time.Duration(1790));
+        var now = Time.now().add(new Time.Duration(60));
         var expires = getExpires();
 
         if (expires == null) {
