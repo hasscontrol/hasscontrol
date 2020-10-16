@@ -23,6 +23,7 @@ class App extends Application.AppBase {
    * - ny logga
    * - glance view = base view
    * - Konvertera error response till en klass
+   * - Meny med logga ut
    *
   */
 

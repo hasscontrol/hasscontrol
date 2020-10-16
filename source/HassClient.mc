@@ -19,15 +19,20 @@ class HassClient {
     static var REQUEST_TYPE_ACTIVATE_SCENE = "activateScene";
 
     function initialize() {
-        _hassUrl = Application.Properties.getValue("host");
+        _hassUrl = null;
         _hostIsValid = false;
 
+        refreshHost();
+
         _auth = new HassAuthClient(_hassUrl);
+
         _sceneToActivate = null;
 
         _callbacks = {
             "activateScene" => null
         };
+
+        System.println("Initialized client with host: " + _hassUrl);
     }
 
     function _addCallback(type, callback) {
@@ -38,10 +43,15 @@ class HassClient {
         _callbacks[type] = callback;
     }
 
-    function onSettingsChanged() {
+    function refreshHost() {
         var host = Application.Properties.getValue("host");
 
         var chars = host.toCharArray();
+
+        if (chars.size() < 8) {
+            _hostIsValid = false;
+            return;
+        }
 
         // strip potential trailing slash
         if (chars[chars.size() - 1] == '/') {
@@ -55,10 +65,11 @@ class HassClient {
             _hostIsValid = false;
         }
 
-        System.println("Setting new host url: " + _hassUrl);
-
         _hassUrl = StringUtil.charArrayToString(chars);
+    }
 
+    function onSettingsChanged() {
+        refreshHost();
         _auth.setHost(_hassUrl);
     }
 

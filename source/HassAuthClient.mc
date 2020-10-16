@@ -37,9 +37,11 @@ class HassAuthClient {
     }
 
     function setHost(host) {
-        if (_hassUrl == host) {
+        if (host.equals(_hassUrl)) {
             return;
         }
+
+        System.println("Setting new host url: " + _hassUrl);
 
         logout();
         _hassUrl = host;
