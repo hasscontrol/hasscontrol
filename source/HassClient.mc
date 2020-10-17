@@ -152,6 +152,18 @@ class HassClient {
         context["fn"].invoke(context["cb"]);
     }
 
+    function logout() {
+        _auth.logout();
+    }
+
+    function login(callback) {
+        _auth.login(callback);
+    }
+
+    function isLoggedIn() {
+        return _auth.isLoggedIn();
+    }
+
     function activateScene(sceneId, cb) {
         _sceneToActivate = sceneId;
 

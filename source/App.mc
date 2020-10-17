@@ -42,6 +42,18 @@ class App extends Application.AppBase {
     Ui.requestUpdate();
   }
 
+  function logout() {
+    hassClient.logout();
+  }
+
+  function login(callback) {
+    hassClient.login(callback);
+  }
+
+  function isLoggedIn() {
+    return hassClient.isLoggedIn();
+  }
+
   function onStart(state) {}
 
   function onStop(state) {}
