@@ -1,4 +1,5 @@
 using Toybox.Application as App;
+using Toybox.StringUtil;
 
 class SceneController {
   var client;
@@ -20,26 +21,68 @@ class SceneController {
 
     if (sceneString != null && sceneString != "") {
       var chars = sceneString.toCharArray();
-      var current = "";
+      var currentId = "";
+      var currentName = "";
 
       for (var i = 0; i < chars.size(); i++) {
         var char = chars[i];
 
         if (char.equals(',')) {
-          scenes.add(current);
-          current = "";
-        } else if (char.equals(' ')) {
-          continue;
+          if (currentId.equals("")) {
+            currentId = currentName;
+          }
+
+          scenes.add([currentId, currentName]);
+          currentId = "";
+          currentName = "";
+        } else if (char.equals('=')) {
+          currentId = currentName;
+          currentName = "";
         } else {
-          current += char;
+          currentName += char;
         }
       }
 
-      if (!current.equals("")) {
-        scenes.add(current);
+      if (!currentName.equals("")) {
+        if (currentId.equals("")) {
+          currentId = currentName;
+        }
+
+        scenes.add([currentId, currentName]);
       }
     }
 
+    // remove whitespace
+    for (var sceneIndex = 0; sceneIndex < scenes.size(); sceneIndex++) {
+      var sceneIdChars = scenes[sceneIndex][0].toCharArray();
+      var sceneNameChars = scenes[sceneIndex][1].toCharArray();
+      var sceneId = "";
+
+      for (var i = 0; i < sceneIdChars.size(); i++) {
+        if (sceneIdChars[i].equals(' ')) {
+          continue;
+        }
+        sceneId += sceneIdChars[i];
+      }
+
+      for (var i = 0; i < sceneNameChars.size(); i++) {
+        if (!sceneNameChars[i].equals(' ')) {
+          break;
+        }
+        sceneNameChars = sceneNameChars.slice(i + 1, null);
+      }
+      for (var i = sceneNameChars.size() - 1; i >= 0; i--) {
+        if (!sceneNameChars[i].equals(' ')) {
+          break;
+        }
+        sceneNameChars = sceneNameChars.slice(null, i);
+      }
+
+      scenes[sceneIndex][0] = sceneId;
+      scenes[sceneIndex][1] = StringUtil.charArrayToString(sceneNameChars);
+    }
+
+    System.println("Loaded scenes: " + scenes);
     if (scenes.size() > 0) {
       _focusedScene = 0;
     } else {
@@ -83,7 +126,7 @@ class SceneController {
     if (_focusedScene == null) {
       return null;
     }
-    return scenes[_focusedScene];
+    return scenes[_focusedScene][1];
   }
 
   function getNextScene() {
@@ -97,7 +140,7 @@ class SceneController {
       return null;
     }
 
-    return scenes[nextScene];
+    return scenes[nextScene][1];
   }
 
   function getPreviousScene() {
@@ -111,7 +154,7 @@ class SceneController {
       return null;
     }
 
-    return scenes[previousScene];
+    return scenes[previousScene][1];
   }
 
   function focusNextScene() {
@@ -163,10 +206,10 @@ class SceneController {
       return;
     }
 
-    System.println("About to activate focused scene: " + scenes[_focusedScene]);
+    System.println("About to activate focused scene: " + scenes[_focusedScene][0]);
 
     App.getApp().viewController.showLoader("Setting Scene");
 
-    client.activateScene(scenes[_focusedScene], method(:onActivateComplete));
+    client.activateScene(scenes[_focusedScene][0], method(:onActivateComplete));
   }
 }
