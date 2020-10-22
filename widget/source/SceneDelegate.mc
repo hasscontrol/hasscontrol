@@ -35,6 +35,14 @@ class SceneDelegate extends Ui.BehaviorDelegate {
                 )
             );
         }
+        // menu.addItem(
+        //     new MenuItem(
+        //         "Refresh Entities",
+        //         "",
+        //         "refresh",
+        //         {}
+        //     )
+        // );
         menu.addItem(
             new MenuItem(
                 "Back",

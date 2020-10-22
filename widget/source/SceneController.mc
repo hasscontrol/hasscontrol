@@ -172,30 +172,10 @@ class SceneController {
   }
 
   function onActivateComplete(error, data) {
-    var errorMessage = null;
-
-    if (error != null && error["errorCode"] == HassClient.ERROR_PHONE_NOT_CONNECTED) {
-      errorMessage = "Phone not\nconnected";
-    } else if (error != null && error["errorCode"] == HassClient.ERROR_INVALID_HOST) {
-      errorMessage = "Check settings\ninvalid host";
-    } else if (error != null && error["errorCode"] == HassClient.ERROR_SERVER_NOT_REACHABLE) {
-      errorMessage = "Home Assistant\nnot reachable";
-    } else if (error != null && error["errorCode"] == HassClient.ERROR_NOT_AUTHORIZED) {
-      errorMessage = "Authentication\nfailed";
-    } else if (error != null && error["errorCode"] == HassClient.ERROR_RESOURCE_NOT_FOUND) {
-      errorMessage = "Resource not\nfound";
-    } else if (error != null && error["errorCode"] == HassClient.ERROR_TOKEN_REVOKED) {
-      errorMessage = "Login Revoked";
-    } else if (error != null) {
-      errorMessage = "Unknown error\noccurred";
-      errorMessage += "\n" + error["type"];
-      errorMessage += "\n" + error["responseCode"];
-    }
-
-    if (errorMessage != null) {
+    if (error != null) {
       System.println(error);
       App.getApp().viewController.removeLoaderImmediate();
-      App.getApp().viewController.showError(errorMessage);
+      App.getApp().viewController.showError(error);
     } else {
       App.getApp().viewController.removeLoader();
     }
@@ -205,8 +185,6 @@ class SceneController {
     if (_focusedScene == null) {
       return;
     }
-
-    System.println("About to activate focused scene: " + scenes[_focusedScene][0]);
 
     App.getApp().viewController.showLoader("Setting Scene");
 

@@ -1,8 +1,8 @@
-using Toybox.Application;
+using Toybox.Application as App;
 using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
 
-class App extends Application.AppBase {
+class App extends App.AppBase {
   var hassClient;
   var sceneController;
   var viewController;
@@ -20,7 +20,6 @@ class App extends Application.AppBase {
 
   /*
    * TODO:
-   * - ny logga
    * - glance view = base view
    * - Konvertera error response till en klass
    * - Meny med logga ut

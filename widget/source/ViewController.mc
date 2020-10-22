@@ -94,8 +94,22 @@ class ViewController {
     _loaderActive = null;
   }
 
-  function showError(message) {
-    System.println("About to show error");
+  function showError(error) {
+    var message = "Unknown Error";
+
+    if (error instanceof Error) {
+      message = error.toShortString();
+
+      if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
+        message += "\ncode ";
+        message += error.responseCode;
+
+        if (error instanceof OAuthError) {
+          message += "\nauth ";
+        }
+      }
+    }
+
     if (_errorView.isActive()) {
       Ui.popView(Ui.SLIDE_IMMEDIATE);
     }
