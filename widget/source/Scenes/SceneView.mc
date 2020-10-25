@@ -19,26 +19,28 @@ class SceneView extends WatchUi.View {
         setLayout(Rez.Layouts.SceneLayout(dc));
     }
 
-    function onShow() {}
+    function onShow() {
+        _controller.refreshScenes();
+    }
 
     // Update the view
     function onUpdate(dc) {
-        var previousSceneText = _controller.getPreviousScene();
-        var activeSceneText = _controller.getFocusedScene();
-        var nextSceneText = _controller.getNextScene();
+        var previousScene = _controller.getPreviousScene();
+        var activeScene = _controller.getFocusedScene();
+        var nextScene = _controller.getNextScene();
 
-        if (previousSceneText) {
-            View.findDrawableById("PreviousScene").setText(previousSceneText);
+        if (previousScene) {
+            View.findDrawableById("PreviousScene").setText(previousScene.getName());
         } else {
             View.findDrawableById("PreviousScene").setText("");
         }
-        if (activeSceneText) {
-            View.findDrawableById("FocusedScene").setText(activeSceneText);
+        if (activeScene) {
+            View.findDrawableById("FocusedScene").setText(activeScene.getName());
         } else {
             View.findDrawableById("FocusedScene").setText("");
         }
-        if (nextSceneText) {
-            View.findDrawableById("NextScene").setText(nextSceneText);
+        if (nextScene) {
+            View.findDrawableById("NextScene").setText(nextScene.getName());
         } else {
             View.findDrawableById("NextScene").setText("");
         }

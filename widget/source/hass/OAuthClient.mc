@@ -229,7 +229,7 @@ class OAuthClient {
     function onWebResponse(responseCode, body, context) {
         var error = null;
 
-        if (responseCode > 200 || responseCode >= 300) {
+        if (responseCode < 200 || responseCode >= 300) {
             error = new RequestError(responseCode);
 
             if (error.code == RequestError.ERROR_NOT_AUTHORIZED) {
@@ -240,13 +240,16 @@ class OAuthClient {
 
         context[:responseCallback].invoke(error, {
             :responseCode => responseCode,
-            :body => body
+            :body => body,
+            :context => context[:context]
         });
     }
 
     function doAuthenticatedWebRequest(error, context) {
         if (error != null) {
-            context[:responseCallback].invoke(error, null);
+            context[:responseCallback].invoke(error, {
+                :context => context[:context]
+            });
             return;
         }
 
@@ -259,7 +262,8 @@ class OAuthClient {
                 "Authorization" => "Bearer " + accessToken
             },
             :context => {
-                :responseCallback => context[:responseCallback]
+                :responseCallback => context[:responseCallback],
+                :context => context[:options][:context]
             }
         };
 

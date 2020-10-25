@@ -2,11 +2,13 @@
     <properties>
         <property id="host" type="string">https://hassio.url</property>
         <property id="scenes" type="string">scene1,scene2,scene3</property>
+        <property id="group" type="string"></property>
     </properties>
 
     <strings>
        <string id="host_title">Host: (https://hassio.url)</string>
        <string id="scenes_title">Scenes: (scene1,scene2,scene3)</string>
+       <string id="group_title">Group: (Group used for importing entities)</string>
     </strings>
 
     <settings>
@@ -14,6 +16,9 @@
             <settingConfig type="url" />
         </setting>
         <setting propertyKey="@Properties.scenes" title="@Strings.scenes_title">
+            <settingConfig type="alphaNumeric" />
+        </setting>
+        <setting propertyKey="@Properties.group" title="@Strings.group_title">
             <settingConfig type="alphaNumeric" />
         </setting>
     </settings>

@@ -2,12 +2,10 @@ using Toybox.WatchUi as Ui;
 using Toybox.Application as App;
 
 class BaseView extends Ui.View {
-    hidden var _sceneController;
     hidden var _firstLoad;
 
-    function initialize(sceneController) {
+    function initialize() {
         View.initialize();
-        _sceneController = sceneController;
         _firstLoad = true;
     }
 
@@ -25,7 +23,7 @@ class BaseView extends Ui.View {
         });
         setLayout([scene]);
 
-        App.getApp().launchSceneView();
+        App.getApp().launchInitialView();
     }
 
     function onUpdate(dc) {

@@ -1,3 +1,10 @@
-<drawables>
-    <bitmap id="LauncherIcon" filename="launcher_icon.png" />
-</drawables>
+<resources>
+    <drawables>
+        <bitmap id="LauncherIcon" filename="launcher_icon.png" />
+        <bitmap id="LightOff" filename="light_off.png" />
+        <bitmap id="LightOn" filename="light_on.png" />
+        <bitmap id="SwitchOn" filename="switch_on.png" />
+        <bitmap id="SwitchOff" filename="switch_off.png" />
+        <bitmap id="Unknown" filename="unknown.png" />
+    </drawables>
+</resources>

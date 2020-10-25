@@ -4,6 +4,11 @@ const AUTH_ENDPOINT = "/auth/authorize";
 const TOKEN_ENDPOINT = "/auth/token";
 
 class HassClient extends OAuthClient {
+    static enum {
+        ENTITY_ACTION_TURN_ON,
+        ENTITY_ACTION_TURN_OFF
+    }
+
     hidden var _baseUrl;
     hidden var _baseUrlIsValid;
 
@@ -78,7 +83,7 @@ class HassClient extends OAuthClient {
         makeAuthenticatedWebRequest(
             _baseUrl + "/api/services/scene/turn_on",
             {
-                "entity_id" => "scene." + sceneId
+                "entity_id" => sceneId
             },
             {
                 :method => Comm.HTTP_REQUEST_METHOD_POST
@@ -96,6 +101,39 @@ class HassClient extends OAuthClient {
             _baseUrl + "/api/states/" + entityId,
             {},
             {},
+            callback
+        );
+    }
+
+    function setEntityState(entityId, entityType, action, callback) {
+        if (validateSettings(callback) != null) {
+            return;
+        }
+
+        var service = "scene";
+        var serviceAction = "turn_on";
+        var newState = "on";
+
+        if (action == HassClient.ENTITY_ACTION_TURN_ON) {
+            serviceAction = "turn_on";
+            newState = "on";
+        } else if (action == HassClient.ENTITY_ACTION_TURN_OFF) {
+            serviceAction = "turn_off";
+            newState = "off";
+        }
+
+        makeAuthenticatedWebRequest(
+            _baseUrl + "/api/services/" + entityType + "/" + serviceAction,
+            {
+                "entity_id" => entityId
+            },
+            {
+                :method => Comm.HTTP_REQUEST_METHOD_POST,
+                :context => {
+                    :entityId => entityId,
+                    :state => newState,
+                }
+            },
             callback
         );
     }

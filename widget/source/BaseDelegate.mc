@@ -7,7 +7,7 @@ class BaseDelegate extends Ui.BehaviorDelegate {
     }
 
     function onSelect() {
-        App.getApp().launchSceneView();
+        App.getApp().launchInitialView();
         return true;
     }
 }
