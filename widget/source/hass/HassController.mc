@@ -25,6 +25,27 @@ class HassController {
     return _entities;
   }
 
+  function getEntitiesByTypes(types) {
+    var entities = new [0];
+
+    for (var eI = 0; eI < _entities.size(); eI++) {
+      var match = false;
+
+      for (var tI = 0; tI < types.size(); tI++) {
+        if (_entities[eI].getType() == types[tI]) {
+          match = true;
+          break;
+        }
+      }
+
+      if (match) {
+        entities.add(_entities[eI]);
+      }
+    }
+
+    return entities;
+  }
+
   function getEntity(id) {
     var entity = null;
 

@@ -3,6 +3,7 @@ using Toybox.Timer;
 using Toybox.Time;
 
 class ViewController {
+  var hassModel;
   hidden var _currentView;
   hidden var _loaderView;
   hidden var _errorView;
@@ -11,15 +12,10 @@ class ViewController {
   hidden var _loginDelegate;
   hidden var _loaderActive;
   hidden var _loaderTimer;
-  hidden var _sceneView;
-  hidden var _sceneDelegate;
   hidden var _sceneController;
 
-  hidden var _entityView;
-  hidden var _entityDelegate;
-  hidden var _entityController;
-
-  function initialize() {
+  function initialize(model) {
+    hassModel = model;
     _loaderView = new ProgressView();
     _errorView = new ErrorView();
     _errorDelegate = new ErrorDelegate();
@@ -27,14 +23,6 @@ class ViewController {
     _loginDelegate = new LoginDelegate();
     _loaderActive = null;
     _loaderTimer = new Timer.Timer();
-
-    _sceneController = new SceneController();
-    _sceneView = new SceneView(_sceneController);
-    _sceneDelegate = new SceneDelegate(_sceneController);
-
-    _entityController = new EntityController();
-    _entityView = new EntityView(_entityController);
-    _entityDelegate = new EntityDelegate(_entityController);
   }
 
 
@@ -44,7 +32,7 @@ class ViewController {
 
 
   function refresh() {
-    _sceneController.refreshScenes();
+    // _sceneController.refreshScenes();
   }
 
 
@@ -55,34 +43,54 @@ class ViewController {
   }
 
   function pushSceneView() {
+    var controller = new EntityListController(
+      hassModel,
+      [Entity.TYPE_SCENE]
+    );
+
     Ui.pushView(
-        _sceneView,
-        _sceneDelegate,
-        Ui.SLIDE_IMMEDIATE
+      new EntityListView(controller),
+      new EntityListDelegate(controller),
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchSceneView() {
+    var controller = new EntityListController(
+      hassModel,
+      [Entity.TYPE_SCENE]
+    );
+
     Ui.switchToView(
-        _sceneView,
-        _sceneDelegate,
-        Ui.SLIDE_IMMEDIATE
+      new EntityListView(controller),
+      new EntityListDelegate(controller),
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function pushEntityView() {
+    var controller = new EntityListController(
+      hassModel,
+      [Entity.TYPE_LIGHT, Entity.TYPE_SWITCH]
+    );
+
     Ui.pushView(
-        _entityView,
-        _entityDelegate,
-        Ui.SLIDE_IMMEDIATE
+      new EntityListView(controller),
+      new EntityListDelegate(controller),
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchEntityView() {
+    var controller = new EntityListController(
+      hassModel,
+      [Entity.TYPE_LIGHT, Entity.TYPE_SWITCH]
+    );
+
     Ui.switchToView(
-        _entityView,
-        _entityDelegate,
-        Ui.SLIDE_IMMEDIATE
+      new EntityListView(controller),
+      new EntityListDelegate(controller),
+      Ui.SLIDE_IMMEDIATE
     );
   }
 

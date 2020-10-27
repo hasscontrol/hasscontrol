@@ -17,7 +17,7 @@ class HassControlApp extends App.AppBase {
     AppBase.initialize();
     hassClient = new HassClient();
     hassController = new HassController(hassClient);
-    viewController = new ViewController();
+    viewController = new ViewController(hassController);
     menu = new MenuController();
   }
 
@@ -104,4 +104,6 @@ class HassControlApp extends App.AppBase {
       new BaseDelegate()
     ];
   }
+
+  function getGlanceView() {}
 }
