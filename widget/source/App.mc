@@ -15,10 +15,6 @@ class HassControlApp extends App.AppBase {
 
   function initialize() {
     AppBase.initialize();
-    hassClient = new HassClient();
-    hassController = new HassController(hassClient);
-    viewController = new ViewController(hassController);
-    menu = new MenuController();
   }
 
   /*
@@ -97,13 +93,23 @@ class HassControlApp extends App.AppBase {
 
   function onStop(state) {}
 
+
+  function getGlanceView() {
+    return [
+      new AppGlance()
+    ];
+  }
+
   // Return the initial view of your application here
   function getInitialView() {
+    hassClient = new HassClient();
+    hassController = new HassController(hassClient);
+    viewController = new ViewController(hassController);
+    menu = new MenuController();
+
     return [
       new BaseView(),
       new BaseDelegate()
     ];
   }
-
-  function getGlanceView() {}
 }
