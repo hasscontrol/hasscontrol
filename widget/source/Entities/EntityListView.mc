@@ -190,6 +190,8 @@ class EntityListView extends Ui.View {
         } else if (state == Entity.STATE_OFF) {
             drawable = WatchUi.loadResource(Rez.Drawables.SwitchOff);
         }
+    } else if (type == Entity.TYPE_SCENE) {
+      drawable = WatchUi.loadResource(Rez.Drawables.Scene);
     }
 
     if (drawable == null) {

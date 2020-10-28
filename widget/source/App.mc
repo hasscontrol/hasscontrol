@@ -20,7 +20,6 @@ class HassControlApp extends App.AppBase {
   /*
    * TODO:
    * - glance view = base view
-   * - Initiera saker i onAppStart som inte behövs i glance view
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
@@ -81,7 +80,7 @@ class HassControlApp extends App.AppBase {
         HassControlApp.SCENES_VIEW
       );
     } else {
-      throw new InvalidValueException("unknown start view");
+      throw new InvalidValueException();
     }
   }
 

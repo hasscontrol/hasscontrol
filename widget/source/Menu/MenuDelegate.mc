@@ -82,5 +82,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
             return true;
         }
+
+        return false;
     }
 }
