@@ -42,54 +42,70 @@ class ViewController {
     return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
   }
 
-  function pushSceneView() {
+  function getSceneView() {
     var controller = new EntityListController(
       hassModel,
       [Entity.TYPE_SCENE]
     );
 
-    Ui.pushView(
+    return [
       new EntityListView(controller),
-      new EntityListDelegate(controller),
+      new EntityListDelegate(controller)
+    ];
+  }
+
+  function getEntityView() {
+    var controller = new EntityListController(
+      hassModel,
+      [
+        Entity.TYPE_LIGHT,
+        Entity.TYPE_SWITCH,
+        Entity.TYPE_AUTOMATION
+      ]
+    );
+
+    return [
+      new EntityListView(controller),
+      new EntityListDelegate(controller)
+    ];
+  }
+
+  function pushSceneView() {
+    var view = getSceneView();
+
+    Ui.pushView(
+      view[0],
+      view[1],
       Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchSceneView() {
-    var controller = new EntityListController(
-      hassModel,
-      [Entity.TYPE_SCENE]
-    );
+    var view = getSceneView();
 
     Ui.switchToView(
-      new EntityListView(controller),
-      new EntityListDelegate(controller),
+      view[0],
+      view[1],
       Ui.SLIDE_IMMEDIATE
     );
   }
 
   function pushEntityView() {
-    var controller = new EntityListController(
-      hassModel,
-      [Entity.TYPE_LIGHT, Entity.TYPE_SWITCH]
-    );
+    var view = getEntityView();
 
     Ui.pushView(
-      new EntityListView(controller),
-      new EntityListDelegate(controller),
+      view[0],
+      view[1],
       Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchEntityView() {
-    var controller = new EntityListController(
-      hassModel,
-      [Entity.TYPE_LIGHT, Entity.TYPE_SWITCH]
-    );
+    var view = getEntityView();
 
     Ui.switchToView(
-      new EntityListView(controller),
-      new EntityListDelegate(controller),
+      view[0],
+      view[1],
       Ui.SLIDE_IMMEDIATE
     );
   }

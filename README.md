@@ -5,9 +5,7 @@ WORK IN PROGRESS
 A garmin widget to interact with [Home Assistant](https://www.home-assistant.io/).
 
 
-<img src="resources/screenshots/tactix_charlie_1.png" height="250" />
 <img src="resources/screenshots/tactix_delta_1.png" height="250" />
-<img src="resources/screenshots/tactix_delta_2.png" height="250" />
 
 
 The widget aims to be simplistic but still provide the most basic functionality, such as triggering scenes or toggling lights and switches.
@@ -21,8 +19,6 @@ Please read through the instructions below, I will try to guide you through the 
 - [Configuration](#configuration)
 - [Logging in](#logging-in)
 - [Group sync](#group-sync)
-- [Usage](#usage)
-- [Releases](#releases)
 
 
 ### Prerequisites
@@ -73,18 +69,11 @@ If you don't see any login request on your phone. Restart the widget after you h
 
 ### Group sync
 Due to the limitations of the watch, there is no really good way of listing and adding entities directly from the watch.
-But the easiest way to add your entities is by (creating a new group)[https://www.home-assistant.io/integrations/group/] in Home Assistant, and add all your entities there.
+But the easiest way to add your entities is by [creating a new group](https://www.home-assistant.io/integrations/group/) in Home Assistant, and add all your entities there.
 
-Then configure the group you just added in the ConnectIQ settings as described (above)[#configuration].
+Then configure the group you just added in the ConnectIQ settings as described [above](#configuration).
 
 Once you have added the group in settings, open the widget and the menu. Then go into settings and select `refresh entities`.
 Once that is done, all entities added to that group in Home Assistant will be imported and available on the watch.
 
 At any time, you can repeat this procedure to add, update or remove entities from your watch.
-
-
-### Usage
-
-### Releases
-- v1.1.0: ....
-- v1.0.0: First release of the widget

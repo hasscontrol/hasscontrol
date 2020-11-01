@@ -10,12 +10,6 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
     function onSelect(item) {
         var itemId = item.getId();
 
-        if (item instanceof EntityCheckbox) {
-            item.entity.setShow(item.isChecked());
-            App.getApp().hassController.persistEntities();
-            return;
-        }
-
         if (itemId == MenuController.MENU_SWITCH_TO_ENTITIES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
 
@@ -41,10 +35,6 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         }
         if (itemId == MenuController.MENU_ENTER_SETTINGS) {
             App.getApp().menu.showSettingsMenu();
-            return true;
-        }
-        if (itemId == MenuController.MENU_SELECT_ENTITIES) {
-            App.getApp().menu.showEntitiesMenu();
             return true;
         }
         if (itemId == MenuController.MENU_SELECT_START_VIEW) {

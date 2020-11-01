@@ -8,7 +8,6 @@ class MenuController {
         MENU_ENTER_SETTINGS,
         MENU_LOGIN,
 
-        MENU_SELECT_ENTITIES,
         MENU_SELECT_START_VIEW,
         MENU_REFRESH_ENTITIES,
         MENU_LOGOUT,
@@ -67,12 +66,6 @@ class MenuController {
         });
 
         menu.addItem(new Ui.MenuItem(
-            "Select entities",
-            "",
-            MenuController.MENU_SELECT_ENTITIES,
-            {}
-        ));
-        menu.addItem(new Ui.MenuItem(
             "Start View",
             App.getApp().getStartView(),
             MenuController.MENU_SELECT_START_VIEW,
@@ -96,7 +89,7 @@ class MenuController {
 
     function showSelectStartViewMenu() {
         var menu = new WatchUi.Menu2({
-            :title => "Start view"
+            :title => "Select start view"
         });
 
         var currentStartView = App.getApp().getStartView();
@@ -134,20 +127,6 @@ class MenuController {
 
         // var entities = App.getApp().hassController.getEntities();
 
-
-        Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
-    }
-
-    function showEntitiesMenu() {
-        var menu = new WatchUi.CheckboxMenu({
-            :title => "Select entities"
-        });
-
-        var entities = App.getApp().hassController.getEntities();
-
-        for (var i = 0; i < entities.size(); i++) {
-            menu.addItem(new EntityCheckbox(entities[i]));
-        }
 
         Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
     }

@@ -16,7 +16,6 @@ class Entity {
       :name => dict["name"],
       :state => dict["state"],
       :ext => dict["ext"],
-      :show => dict["show"]
     });
   }
 
@@ -55,6 +54,7 @@ class Entity {
     TYPE_SCENE,
     TYPE_LIGHT,
     TYPE_SWITCH,
+    TYPE_AUTOMATION,
     TYPE_UNKNOWN
   }
 
@@ -63,14 +63,12 @@ class Entity {
   hidden var _mName; // Name
   hidden var _mState; // Current State
   hidden var _mExt; // Is this entity loaded from settings?
-  hidden var _mShow; // Should we show this entity in the UI
 
   function initialize(entity) {
     _mId = entity[:id];
     _mName = entity[:name];
     _mState = Entity.stringToState(entity[:state]);
     _mExt = entity[:ext] == true;
-    _mShow = entity[:show];
 
     if (_mId.find("scene.") != null) {
       _mType = TYPE_SCENE;
@@ -78,6 +76,8 @@ class Entity {
       _mType = TYPE_LIGHT;
     } else if (_mId.find("switch.") != null) {
       _mType = TYPE_SWITCH;
+    } else if (_mId.find("automation.") != null) {
+      _mType = TYPE_AUTOMATION;
     } else {
       _mType = TYPE_UNKNOWN;
     }
@@ -125,21 +125,12 @@ class Entity {
     return _mExt;
   }
 
-  function shouldShow() {
-    return _mShow;
-  }
-
-  function setShow(shouldBeVisible) {
-    _mShow = shouldBeVisible;
-  }
-
   function toDict() {
     return {
       "id" => _mId,
       "name" => _mName,
       "state" => Entity.stateToString(_mState),
       "ext" => _mExt,
-      "show" => _mShow,
     };
   }
 

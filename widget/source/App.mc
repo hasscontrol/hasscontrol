@@ -19,6 +19,8 @@ class HassControlApp extends App.AppBase {
 
   /*
    * TODO:
+   * - hämta states när man startar appen
+   * - reagera på updaterade settings
    * - glance view = base view
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
@@ -92,7 +94,6 @@ class HassControlApp extends App.AppBase {
 
   function onStop(state) {}
 
-
   function getGlanceView() {
     return [
       new AppGlance()
@@ -106,9 +107,38 @@ class HassControlApp extends App.AppBase {
     viewController = new ViewController(hassController);
     menu = new MenuController();
 
+    // hassController.refreshAllEntityStates();
+
+    var deviceSettings = System.getDeviceSettings();
+    var view = null;
+    var delegate = null;
+
+    if (deviceSettings has :isGlanceModeEnabled) {
+      if (deviceSettings.isGlanceModeEnabled) {
+        var initialView = getStartView();
+
+        if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
+          var entityView = viewController.getEntityView();
+          view = entityView[0];
+          delegate = entityView[1];
+        }
+        if (initialView.equals(HassControlApp.SCENES_VIEW)) {
+          var sceneView = viewController.getSceneView();
+          view = sceneView[0];
+          delegate = sceneView[1];
+        }
+      }
+    }
+
+    if (view == null || delegate == null) {
+      view = new BaseView();
+      delegate = new BaseDelegate();
+    }
+
+
     return [
-      new BaseView(),
-      new BaseDelegate()
+      view,
+      delegate
     ];
   }
 }

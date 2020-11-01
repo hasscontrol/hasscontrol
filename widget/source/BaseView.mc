@@ -22,8 +22,6 @@ class BaseView extends Ui.View {
             :locY => WatchUi.LAYOUT_VALIGN_CENTER
         });
         setLayout([scene]);
-
-        App.getApp().launchInitialView();
     }
 
     function onUpdate(dc) {

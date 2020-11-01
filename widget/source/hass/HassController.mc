@@ -98,7 +98,6 @@ class HassController {
           :id => scenes[i][0],
           :name => scenes[i][1],
           :state => "scening",
-          :show => true,
           :ext => true
         }));
       }
@@ -110,27 +109,44 @@ class HassController {
   }
 
   function onReceiveRefreshedEntity(err, data) {
-    if (err == null) {
-      var name = data[:body]["attributes"]["friendly_name"];
-      var state = data[:body]["state"];
+    if (
+      err != null
+      && !(err instanceof RequestError && err.code == RequestError.ERROR_NOT_FOUND)
+    ) {
 
-      if (state == null) {
-        state = "unknown";
-      }
-
-      var entity = getEntity(data[:body]["entity_id"]);
-      entity.setName(name);
-      entity.setState(state);
-
-      // TODO: we need to make sure we only call this same amout as we have entities
-      // we dont want to be stuck in a endless loop
-      refreshPendingEntity();
-    } else {
       App.getApp().viewController.showError(err);
+      return;
     }
+
+    var name = null;
+    var state = null;
+
+    if (data != null && data[:body] != null) {
+      if (data[:body]["attributes"] != null) {
+        name = data[:body]["attributes"]["friendly_name"];
+      }
+      state = data[:body]["state"];
+    }
+
+    var entity = getEntity(data[:body]["entity_id"]);
+
+    if (name != null) {
+      entity.setName(name);
+    }
+
+    if (state != null) {
+      entity.setState(state);
+    } else {
+      System.println(entity);
+      entity.setState(Entity.STATE_UNKNOWN);
+    }
+
+    // TODO: we need to make sure we only call this same amout as we have entities
+    // we dont want to be stuck in a endless loop
+    refreshPendingEntities();
   }
 
-  function refreshPendingEntity() {
+  function refreshPendingEntities() {
     var entity = null;
 
     for (var i = 0; i < _entities.size(); i++) {
@@ -159,15 +175,22 @@ class HassController {
         _entities.add(new Entity({
           :id => entities[i],
           :name => "",
-          :state => null,
-          :show => true // TODO: we need to persist existing setting
+          :state => null
         }));
       }
 
-      refreshPendingEntity();
+      refreshPendingEntities();
     } else {
       App.getApp().viewController.showError(err);
     }
+  }
+
+  function refreshAllEntityStates() {
+      for (var i = 0; i < _entities.size(); i++) {
+        _entities[i].setState(null);
+      }
+
+      refreshPendingEntities();
   }
 
   function fetchEntities() {
@@ -226,6 +249,8 @@ class HassController {
       entityType = "light";
     } else if (entity.getType() == Entity.TYPE_SWITCH) {
       entityType = "switch";
+    } else if (entity.getType() == Entity.TYPE_AUTOMATION) {
+      entityType = "automation";
     }
 
     App.getApp().viewController.showLoader(loadingText);
