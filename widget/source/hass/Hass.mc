@@ -1,24 +1,23 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
+using Toybox.System;
 
 using Utils;
 
+module Hass {
+  const STORAGE_KEY = "hassController/entities";
 
-class HassController {
-  static var STORAGE_KEY = "hassController/entities";
+  var client = null;
+  var _entities = new [0];
+  var _entitiesToRefresh = new [0];
+  var _continueRefreshOnError = false;
 
-  hidden var client;
-  hidden var _entities;
-
-  function initialize(hassClient) {
-    client = hassClient;
-    _entities = new [0];
-
-    loadEntities();
+  function initClient() {
+    client = new Client();
   }
 
   function getGroup() {
-    return Application.Properties.getValue("group");
+    return App.Properties.getValue("group");
   }
 
   function getEntities() {
@@ -59,7 +58,7 @@ class HassController {
     return entity;
   }
 
-  function persistEntities() {
+  function storeEntities() {
     var entities = new [0];
 
     for (var i = 0; i < _entities.size(); i++) {
@@ -70,22 +69,9 @@ class HassController {
     }
 
     App.Storage.setValue(HassController.STORAGE_KEY, entities);
-
   }
 
-  function loadEntities() {
-    var entities = App.Storage.getValue(HassController.STORAGE_KEY);
-
-    _entities = new [0];
-
-    if (entities == null) {
-      return;
-    }
-
-    for (var i = 0; i < entities.size(); i++) {
-      _entities.add(Entity.createFromDict(entities[i]));
-    }
-
+  function loadScenesFromSettings() {
     var scenes = Utils.getScenesFromSettings();
 
     for (var i = 0; i < scenes.size(); i++) {
@@ -102,19 +88,33 @@ class HassController {
         }));
       }
     }
+  }
 
-    System.println(_entities);
+  function loadStoredEntities() {
+    var entities = App.Storage.getValue(STORAGE_KEY);
+
+    _entities = new [0];
+
+    if (entities == null) {
+      return;
+    }
+
+    for (var i = 0; i < entities.size(); i++) {
+      _entities.add(Entity.createFromDict(entities[i]));
+    }
+
+    loadScenesFromSettings();
 
     System.println("Loaded entities: " + _entities);
   }
 
-  function onReceiveRefreshedEntity(err, data) {
-    if (
-      err != null
-      && !(err instanceof RequestError && err.code == RequestError.ERROR_NOT_FOUND)
-    ) {
-
-      App.getApp().viewController.showError(err);
+  function _onReceiveEntity(err, data) {
+    if (err != null) {
+      if (data[:context][:callback] != null) {
+        data[:context][:callback].invoke(err, null);
+      } else {
+        App.getApp().viewController.showError(err);
+      }
       return;
     }
 
@@ -137,35 +137,56 @@ class HassController {
     if (state != null) {
       entity.setState(state);
     } else {
-      System.println(entity);
       entity.setState(Entity.STATE_UNKNOWN);
     }
 
-    // TODO: we need to make sure we only call this same amout as we have entities
-    // we dont want to be stuck in a endless loop
-    refreshPendingEntities();
+    if (data[:context][:callback] != null) {
+      data[:context][:callback].invoke(null, entity);
+    }
   }
 
-  function refreshPendingEntities() {
-    var entity = null;
+  function refreshEntity(entity, callback) {
+    client.getEntity(
+      entity.getId(),
+      {
+        :entity => entity,
+        :callback => callback
+      },
+      Utils.method(Hass, :_onReceiveEntity)
+    );
+  }
 
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].getState() == null) {
-        entity = _entities[i];
-        break;
-      }
+  function _refreshPendingEntities(error, noop) {
+    if (error != null && !_continueRefreshOnError) {
+      App.getApp().viewController.removeLoader();
+      App.getApp().viewController.showError(error);
+
+      return;
     }
 
-    if (entity != null) {
-      client.getEntity(entity.getId(), method(:onReceiveRefreshedEntity));
+    if (_entitiesToRefresh.size() > 0) {
+      var entity = _entitiesToRefresh[0];
+
+      _entitiesToRefresh.remove(entity);
+
+      refreshEntity(entity, Utils.method(Hass, :_refreshPendingEntities));
     } else {
-      System.println(_entities);
-      persistEntities();
       App.getApp().viewController.removeLoader();
     }
   }
 
-  function onReceiveEntities(err, data) {
+  function refreshAllEntities(continueOnError) {
+    _entitiesToRefresh = new [0];
+    _continueRefreshOnError = continueOnError == true;
+
+    for (var i = 0; i < _entities.size(); i++) {
+      _entitiesToRefresh.add(_entities[i]);
+    }
+
+    _refreshPendingEntities(null, null);
+  }
+
+  function _onReceiveEntities(err, data) {
     if (err == null) {
       var entities = data[:body]["attributes"]["entity_id"];
 
@@ -179,21 +200,16 @@ class HassController {
         }));
       }
 
-      refreshPendingEntities();
+      loadScenesFromSettings();
+
+      refreshAllEntities(false);
     } else {
+      App.getApp().viewController.removeLoader();
       App.getApp().viewController.showError(err);
     }
   }
 
-  function refreshAllEntityStates() {
-      for (var i = 0; i < _entities.size(); i++) {
-        _entities[i].setState(null);
-      }
-
-      refreshPendingEntities();
-  }
-
-  function fetchEntities() {
+  function importEntities() {
     var group = getGroup();
 
     if (group == null || group.find("group.") == null) {
@@ -203,7 +219,7 @@ class HassController {
 
     App.getApp().viewController.showLoader("Refreshing");
 
-    client.getEntity(group, method(:onReceiveEntities));
+    client.getEntity(group, null, Utils.method(Hass, :_onReceiveEntities));
   }
 
   function onToggleEntityStateCompleted(error, data) {
@@ -219,7 +235,7 @@ class HassController {
       if (entity != null) {
         entity.setState(data[:context][:state]);
 
-        persistEntities();
+        storeEntities();
         Ui.requestUpdate();
       }
     }
@@ -235,10 +251,10 @@ class HassController {
     var loadingText = "Loading";
 
     if (currentState == Entity.STATE_ON) {
-      action = HassClient.ENTITY_ACTION_TURN_OFF;
+      action = Client.ENTITY_ACTION_TURN_OFF;
       loadingText = "Turning off";
     } else if (currentState == Entity.STATE_OFF) {
-      action = HassClient.ENTITY_ACTION_TURN_ON;
+      action = Client.ENTITY_ACTION_TURN_ON;
       loadingText = "Turning on";
     }
 
@@ -254,6 +270,59 @@ class HassController {
     }
 
     App.getApp().viewController.showLoader(loadingText);
-    client.setEntityState(entityId, entityType, action, method(:onToggleEntityStateCompleted));
+
+    client.setEntityState(entityId, entityType, action, Utils.method(Hass, :onToggleEntityStateCompleted));
   }
+}
+
+class HassController {
+
+
+
+  // function _refreshPendingEntities() {
+  //   var entity = null;
+
+  //   for (var i = 0; i < _entities.size(); i++) {
+  //     if (_entities[i].getState() == null) {
+  //       entity = _entities[i];
+  //       break;
+  //     }
+  //   }
+
+  //   if (entity != null) {
+  //     client.getEntity(entity.getId(), method(:onReceiveRefreshedEntity));
+  //   } else {
+  //     System.println(_entities);
+  //     storeEntities();
+  //     App.getApp().viewController.removeLoader();
+  //   }
+  // }
+
+  // function onReceiveEntities(err, data) {
+  //   if (err == null) {
+  //     var entities = data[:body]["attributes"]["entity_id"];
+
+  //     _entities = new [0];
+
+  //     for (var i = 0; i < entities.size(); i++) {
+  //       _entities.add(new Entity({
+  //         :id => entities[i],
+  //         :name => "",
+  //         :state => null
+  //       }));
+  //     }
+
+  //     _refreshPendingEntities();
+  //   } else {
+  //     App.getApp().viewController.showError(err);
+  //   }
+  // }
+
+  // function refreshAllEntityStates() {
+  //     for (var i = 0; i < _entities.size(); i++) {
+  //       _entities[i].setState(null);
+  //     }
+
+  //     _refreshPendingEntities();
+  // }
 }

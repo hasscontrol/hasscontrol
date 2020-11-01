@@ -6,6 +6,7 @@ class Error {
 
     var code;
     var message;
+    var context;
 
     function initialize(errorCode) {
         if (errorCode == Error.ERROR_PHONE_NOT_CONNECTED) {
@@ -16,11 +17,21 @@ class Error {
 
         code = OAuthError.ERROR_UNKNOWN;
         message = Rez.Strings.Error_Unknown;
+        context = null;
+    }
+
+    function setContext(ctx) {
+        context = ctx;
     }
 
     function toString() {
         var str = Ui.loadResource(message);
-        return "Error: " + str;
+        var string = "Error: " + str;
+
+        if (context != null) {
+            string += " ctx=" + context;
+        }
+        return string;
     }
 
     function toShortString() {

@@ -1,5 +1,6 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
+using Hass;
 
 class MenuController {
     enum {
@@ -73,7 +74,7 @@ class MenuController {
         ));
         menu.addItem(new Ui.MenuItem(
             "Refresh entities",
-            App.getApp().hassController.getGroup(),
+            Hass.getGroup(),
             MenuController.MENU_REFRESH_ENTITIES,
             {}
         ));

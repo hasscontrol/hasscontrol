@@ -1,19 +1,18 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
+using Hass;
 
 class EntityListController {
   hidden var _mEntities;
   hidden var _mHassModel;
   hidden var _mIndex;
 
-  function initialize(hassModel, types) {
-    _mHassModel = hassModel;
-
+  function initialize(types) {
     if (types != null) {
-      _mEntities = hassModel.getEntitiesByTypes(types);
+      _mEntities = Hass.getEntitiesByTypes(types);
     } else {
-      _mEntities = hassModel.getEntities();
+      _mEntities = Hass.getEntities();
     }
 
     _mIndex = 0;
@@ -43,7 +42,7 @@ class EntityListController {
   }
 
   function toggleEntity(entity) {
-    _mHassModel.toggleEntityState(entity);
+    Hass.toggleEntityState(entity);
   }
 }
 
@@ -178,25 +177,25 @@ class EntityListView extends Ui.View {
     var type = entity.getType();
     var state = entity.getState();
 
-    if (type == Entity.TYPE_LIGHT) {
-        if (state == Entity.STATE_ON) {
+    if (type == Hass.TYPE_LIGHT) {
+        if (state == Hass.STATE_ON) {
             drawable = WatchUi.loadResource(Rez.Drawables.LightOn);
-        } else if (state == Entity.STATE_OFF) {
+        } else if (state == Hass.STATE_OFF) {
             drawable = WatchUi.loadResource(Rez.Drawables.LightOff);
         }
-    } else if (type == Entity.TYPE_SWITCH) {
-        if (state == Entity.STATE_ON) {
+    } else if (type == Hass.TYPE_SWITCH) {
+        if (state == Hass.STATE_ON) {
             drawable = WatchUi.loadResource(Rez.Drawables.SwitchOn);
-        } else if (state == Entity.STATE_OFF) {
+        } else if (state == Hass.STATE_OFF) {
             drawable = WatchUi.loadResource(Rez.Drawables.SwitchOff);
         }
-    } else if (type == Entity.TYPE_AUTOMATION) {
-        if (state == Entity.STATE_ON) {
+    } else if (type == Hass.TYPE_AUTOMATION) {
+        if (state == Hass.STATE_ON) {
             drawable = WatchUi.loadResource(Rez.Drawables.AutomationOn);
-        } else if (state == Entity.STATE_OFF) {
+        } else if (state == Hass.STATE_OFF) {
             drawable = WatchUi.loadResource(Rez.Drawables.AutomationOff);
         }
-    } else if (type == Entity.TYPE_SCENE) {
+    } else if (type == Hass.TYPE_SCENE) {
       drawable = WatchUi.loadResource(Rez.Drawables.Scene);
     }
 

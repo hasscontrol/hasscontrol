@@ -1,7 +1,10 @@
 using Toybox.WatchUi as Ui;
+using Hass;
 
 (:glance)
 class AppGlance extends Ui.GlanceView {
+  var _mClient;
+
   function initialize() {
     GlanceView.initialize();
   }

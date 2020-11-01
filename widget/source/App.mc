@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
+using Hass;
 
 
 class HassControlApp extends App.AppBase {
@@ -8,8 +9,6 @@ class HassControlApp extends App.AppBase {
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
 
-  var hassClient;
-  var hassController;
   var viewController;
   var menu;
 
@@ -19,9 +18,7 @@ class HassControlApp extends App.AppBase {
 
   /*
    * TODO:
-   * - hämta states när man startar appen
    * - reagera på updaterade settings
-   * - glance view = base view
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
@@ -42,8 +39,8 @@ class HassControlApp extends App.AppBase {
   }
 
   function onSettingsChanged() {
-    hassClient.onSettingsChanged();
-    hassController.loadEntities();
+    // Client.onSettingsChanged();
+    Hass.loadScenesFromSettings();
 
     viewController.refresh();
 
@@ -51,16 +48,16 @@ class HassControlApp extends App.AppBase {
   }
 
   function logout() {
-    hassClient.logout();
+    Hass.client.logout();
   }
 
   function login(callback) {
-    hassClient.login(callback);
+    Hass.client.login(callback);
   }
 
   function getStartView() {
     var startView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
-    System.println("loaded startview: " + startView);
+
     if (startView == null && startView.equals(HassControlApp.SCENES_VIEW)) {
       return HassControlApp.SCENES_VIEW;
     } else if (startView != null && startView.equals(HassControlApp.ENTITIES_VIEW)) {
@@ -87,7 +84,7 @@ class HassControlApp extends App.AppBase {
   }
 
   function isLoggedIn() {
-    return hassClient.isLoggedIn();
+    return Hass.client.isLoggedIn();
   }
 
   function onStart(state) {}
@@ -102,12 +99,15 @@ class HassControlApp extends App.AppBase {
 
   // Return the initial view of your application here
   function getInitialView() {
-    hassClient = new HassClient();
-    hassController = new HassController(hassClient);
-    viewController = new ViewController(hassController);
+    viewController = new ViewController();
     menu = new MenuController();
 
-    // hassController.refreshAllEntityStates();
+    Hass.initClient();
+    Hass.loadStoredEntities();
+
+    if (isLoggedIn()) {
+      Hass.refreshAllEntities(true);
+    }
 
     var deviceSettings = System.getDeviceSettings();
     var view = null;

@@ -1,5 +1,6 @@
 using Toybox.Application as App;
 using Toybox.StringUtil;
+using Toybox.Lang;
 
 module Utils {
   function getScenesFromSettings() {
@@ -81,5 +82,9 @@ module Utils {
     }
 
     return scenes;
+  }
+
+  function method(Scope, symbol) {
+    return new Lang.Method(Scope, symbol);
   }
 }

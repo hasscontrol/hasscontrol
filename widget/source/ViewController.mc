@@ -2,8 +2,9 @@ using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using Toybox.Time;
 
+using Hass;
+
 class ViewController {
-  var hassModel;
   hidden var _currentView;
   hidden var _loaderView;
   hidden var _errorView;
@@ -14,8 +15,7 @@ class ViewController {
   hidden var _loaderTimer;
   hidden var _sceneController;
 
-  function initialize(model) {
-    hassModel = model;
+  function initialize() {
     _loaderView = new ProgressView();
     _errorView = new ErrorView();
     _errorDelegate = new ErrorDelegate();
@@ -44,8 +44,7 @@ class ViewController {
 
   function getSceneView() {
     var controller = new EntityListController(
-      hassModel,
-      [Entity.TYPE_SCENE]
+      [Hass.TYPE_SCENE]
     );
 
     return [
@@ -56,11 +55,10 @@ class ViewController {
 
   function getEntityView() {
     var controller = new EntityListController(
-      hassModel,
       [
-        Entity.TYPE_LIGHT,
-        Entity.TYPE_SWITCH,
-        Entity.TYPE_AUTOMATION
+        Hass.TYPE_LIGHT,
+        Hass.TYPE_SWITCH,
+        Hass.TYPE_AUTOMATION
       ]
     );
 
@@ -182,6 +180,10 @@ class ViewController {
           message += "\nauth ";
         }
       }
+
+      if (error.context != null) {
+        message += "\n" + error.context;
+      }
     } else if (error instanceof String) {
       message = error;
     }
@@ -194,6 +196,7 @@ class ViewController {
 
     Ui.pushView(_errorView, _errorDelegate, Ui.SLIDE_IMMEDIATE);
 
+    System.println(error);
     Ui.requestUpdate();
   }
 

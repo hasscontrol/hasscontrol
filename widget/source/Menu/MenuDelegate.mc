@@ -1,6 +1,7 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Application as App;
 using Toybox.System;
+using Hass;
 
 class MenuDelegate extends Ui.Menu2InputDelegate {
     function initialize() {
@@ -42,7 +43,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             return true;
         }
         if (itemId == MenuController.MENU_REFRESH_ENTITIES) {
-            App.getApp().hassController.fetchEntities();
+            Hass.importEntities();
             return true;
         }
 
