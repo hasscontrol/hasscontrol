@@ -153,7 +153,7 @@ class EntityListView extends Ui.View {
 
     for (var i = 0; i < fonts.size(); i++) {
         var truncate = i == fonts.size() - 1;
-        System.println(truncate);
+
         var tempText = Graphics.fitTextToArea(text, fonts[i], fontWidth, fontHeight, truncate);
 
         if (tempText != null) {
@@ -232,8 +232,6 @@ class EntityListView extends Ui.View {
 
     var barStart = (topDegreeStart + padding) + (barSize * currentIndex);
 
-    System.println(barStart);
-
     dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     dc.setPenWidth(10);
     dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
@@ -251,7 +249,7 @@ class EntityListView extends Ui.View {
 
   function shouldShowBar() {
     var index = _mController.getIndex();
-    System.println("shouldShowBar()");
+
     if (_mTimerActive && _mShowBar == true) {
       return;
     }
@@ -260,7 +258,6 @@ class EntityListView extends Ui.View {
       if (_mTimerActive) {
         _mTimer.stop();
       }
-      System.println("starting timer");
       _mShowBar = true;
       _mTimer.start(method(:onTimerDone), 1000, false);
     }

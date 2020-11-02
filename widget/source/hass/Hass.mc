@@ -74,11 +74,21 @@ module Hass {
   function loadScenesFromSettings() {
     var scenes = Utils.getScenesFromSettings();
 
+    // first remove all external scenes to make sure we are not persisting any old scenes
+    for (var i = 0; i < _entities.size(); i++) {
+      if (_entities[i].isExternal()) {
+        _entities.remove(_entities[i]);
+      }
+    }
+
     for (var i = 0; i < scenes.size(); i++) {
       var entity = getEntity(scenes[i][0]);
 
       if (entity != null) {
-        entity.setName(scenes[i][1]);
+        // We only set the name if it's different than the id
+        if (!scenes[i][0].equals(scenes[i][1])) {
+          entity.setName(scenes[i][1]);
+        }
       } else {
         _entities.add(new Entity({
           :id => scenes[i][0],
@@ -161,6 +171,10 @@ module Hass {
       App.getApp().viewController.removeLoader();
       App.getApp().viewController.showError(error);
 
+      // We need to finalize with reading the scenes from settings again,
+      // so that the name config takes precedence
+      loadScenesFromSettings();
+
       return;
     }
 
@@ -171,6 +185,10 @@ module Hass {
 
       refreshEntity(entity, Utils.method(Hass, :_refreshPendingEntities));
     } else {
+      // We need to finalize with reading the scenes from settings again,
+      // so that the name config takes precedence
+      loadScenesFromSettings();
+
       App.getApp().viewController.removeLoader();
     }
   }
@@ -195,7 +213,7 @@ module Hass {
       for (var i = 0; i < entities.size(); i++) {
         _entities.add(new Entity({
           :id => entities[i],
-          :name => "",
+          :name => entities[i],
           :state => null
         }));
       }

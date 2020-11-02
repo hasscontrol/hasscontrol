@@ -31,11 +31,6 @@ class ViewController {
   // vad händer om användaren stänger loader innan appen stänger loader?
 
 
-  function refresh() {
-    // _sceneController.refreshScenes();
-  }
-
-
   // Since the progress bar is not a normal view,
   // We need to work around that it doesnt have onHide and onShow
   function isShowingLoader() {
@@ -140,7 +135,6 @@ class ViewController {
 
 
   function removeLoader() {
-    System.println("About to remove loader");
     if (isShowingLoader()) {
       // if loader is about to close too soon, we need to delay it
       if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
@@ -149,8 +143,6 @@ class ViewController {
       }
 
       Ui.popView(Ui.SLIDE_BLINK);
-    } else {
-      System.println("Loader is not visible");
     }
 
     _loaderActive = null;

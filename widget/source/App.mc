@@ -18,7 +18,6 @@ class HassControlApp extends App.AppBase {
 
   /*
    * TODO:
-   * - reagera på updaterade settings
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
@@ -39,10 +38,8 @@ class HassControlApp extends App.AppBase {
   }
 
   function onSettingsChanged() {
-    // Client.onSettingsChanged();
     Hass.loadScenesFromSettings();
-
-    viewController.refresh();
+    Hass.client.refreshBaseUrl();
 
     Ui.requestUpdate();
   }

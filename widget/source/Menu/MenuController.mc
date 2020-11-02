@@ -90,7 +90,7 @@ class MenuController {
 
     function showSelectStartViewMenu() {
         var menu = new WatchUi.Menu2({
-            :title => "Select start view"
+            :title => "Start view"
         });
 
         var currentStartView = App.getApp().getStartView();
@@ -125,9 +125,6 @@ class MenuController {
             MenuController.MENU_BACK,
             {}
         ));
-
-        // var entities = App.getApp().hassController.getEntities();
-
 
         Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
     }
