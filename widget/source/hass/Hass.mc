@@ -5,7 +5,7 @@ using Toybox.System;
 using Utils;
 
 module Hass {
-  const STORAGE_KEY = "hassController/entities";
+  const STORAGE_KEY = "Hass/entities";
 
   var client = null;
   var _entities = new [0];
@@ -68,7 +68,7 @@ module Hass {
       entities.add(_entities[i].toDict());
     }
 
-    App.Storage.setValue(HassController.STORAGE_KEY, entities);
+    App.Storage.setValue(STORAGE_KEY, entities);
   }
 
   function loadScenesFromSettings() {
@@ -175,6 +175,9 @@ module Hass {
       // so that the name config takes precedence
       loadScenesFromSettings();
 
+      storeEntities();
+
+      Ui.requestUpdate();
       return;
     }
 
@@ -188,6 +191,10 @@ module Hass {
       // We need to finalize with reading the scenes from settings again,
       // so that the name config takes precedence
       loadScenesFromSettings();
+
+      storeEntities();
+
+      Ui.requestUpdate();
 
       App.getApp().viewController.removeLoader();
     }
@@ -211,11 +218,17 @@ module Hass {
       _entities = new [0];
 
       for (var i = 0; i < entities.size(); i++) {
-        _entities.add(new Entity({
-          :id => entities[i],
-          :name => entities[i],
-          :state => null
-        }));
+        var entity = getEntity(entities[i]);
+
+        if (entity == null) {
+          _entities.add(new Entity({
+            :id => entities[i],
+            :name => entities[i],
+            :state => null
+          }));
+        } else {
+          entity.setExternal(false);
+        }
       }
 
       loadScenesFromSettings();

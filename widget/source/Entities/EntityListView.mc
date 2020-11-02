@@ -5,17 +5,29 @@ using Hass;
 
 class EntityListController {
   hidden var _mEntities;
+  hidden var _mTypes;
   hidden var _mHassModel;
   hidden var _mIndex;
 
   function initialize(types) {
-    if (types != null) {
-      _mEntities = Hass.getEntitiesByTypes(types);
+    _mTypes = types;
+    _mIndex = 0;
+
+    refreshEntities();
+  }
+
+  function refreshEntities() {
+    if (_mTypes != null) {
+      _mEntities = Hass.getEntitiesByTypes(_mTypes);
     } else {
       _mEntities = Hass.getEntities();
     }
 
-    _mIndex = 0;
+    if (_mIndex >= _mEntities.size()) {
+      _mIndex = _mEntities.size() - 1;
+    } else if (_mIndex < 0) {
+      _mIndex = 0;
+    }
   }
 
   function getCurrentEntity() {
@@ -267,6 +279,8 @@ class EntityListView extends Ui.View {
 
   function onUpdate(dc) {
     View.onUpdate(dc);
+
+    _mController.refreshEntities();
 
     var entity = _mController.getCurrentEntity();
 

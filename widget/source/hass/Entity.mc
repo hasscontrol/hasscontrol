@@ -106,6 +106,10 @@ module Hass {
       return _mExt;
     }
 
+    function setExternal(isExternal) {
+      _mExt = isExternal;
+    }
+
     function toDict() {
       return {
         "id" => _mId,

@@ -55,7 +55,7 @@ class HassControlApp extends App.AppBase {
   function getStartView() {
     var startView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
 
-    if (startView == null && startView.equals(HassControlApp.SCENES_VIEW)) {
+    if (startView != null && startView.equals(HassControlApp.SCENES_VIEW)) {
       return HassControlApp.SCENES_VIEW;
     } else if (startView != null && startView.equals(HassControlApp.ENTITIES_VIEW)) {
       return HassControlApp.ENTITIES_VIEW;
@@ -101,6 +101,7 @@ class HassControlApp extends App.AppBase {
 
     Hass.initClient();
     Hass.loadStoredEntities();
+    Hass.loadScenesFromSettings();
 
     if (isLoggedIn()) {
       Hass.refreshAllEntities(true);
