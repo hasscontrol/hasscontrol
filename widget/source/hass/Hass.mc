@@ -75,11 +75,16 @@ module Hass {
     var scenes = Utils.getScenesFromSettings();
 
     // first remove all external scenes to make sure we are not persisting any old scenes
+    var entitiesToRemove = new [0];
     for (var i = 0; i < _entities.size(); i++) {
       if (_entities[i].isExternal()) {
-        _entities.remove(_entities[i]);
+        entitiesToRemove.add(_entities[i]);
       }
     }
+    for (var i = 0; i < entitiesToRemove.size(); i++) {
+      _entities.remove(entitiesToRemove[i]);
+    }
+    entitiesToRemove = null;
 
     for (var i = 0; i < scenes.size(); i++) {
       var entity = getEntity(scenes[i][0]);
