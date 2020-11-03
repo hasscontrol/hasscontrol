@@ -1,6 +1,4 @@
-##HassControl
-
-WORK IN PROGRESS
+## HassControl
 
 A garmin widget to interact with [Home Assistant](https://www.home-assistant.io/).
 
@@ -14,11 +12,12 @@ Due to limitations by both Garmin and Apple/Android some setup steps will be mor
 
 Please read through the instructions below, I will try to guide you through the steps :)
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Logging in](#logging-in)
-- [Group sync](#group-sync)
+- [HassControl](#hasscontrol)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Logging in](#logging-in)
+  - [Group sync](#group-sync)
 
 
 ### Prerequisites

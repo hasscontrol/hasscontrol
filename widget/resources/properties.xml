@@ -1,7 +1,7 @@
 <resources>
     <properties>
         <property id="host" type="string">https://hassio.url</property>
-        <property id="scenes" type="string">scene1,scene2,scene3</property>
+        <property id="scenes" type="string"></property>
         <property id="group" type="string"></property>
     </properties>
 
