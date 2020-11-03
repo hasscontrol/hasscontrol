@@ -2,6 +2,12 @@
     <string id="AppName">HassControl</string>
 
 
+    <!-- Entity List -->
+    <string id="NoEntities">No entities configured</string>
+
+
+
+    <!-- ERROR -->
     <string id="Error_Unknown">Unknown error</string>
     <string id="Error_PhoneNotConnected">Phone not connected</string>
 

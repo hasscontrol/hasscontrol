@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
+using Hass;
 
 
 class HassControlApp extends App.AppBase {
@@ -8,23 +9,15 @@ class HassControlApp extends App.AppBase {
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
 
-  var hassClient;
-  var hassController;
   var viewController;
   var menu;
 
   function initialize() {
     AppBase.initialize();
-    hassClient = new HassClient();
-    hassController = new HassController(hassClient);
-    viewController = new ViewController();
-    menu = new MenuController();
   }
 
   /*
    * TODO:
-   * - glance view = base view
-   * - Initiera saker i onAppStart som inte behövs i glance view
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
@@ -45,26 +38,24 @@ class HassControlApp extends App.AppBase {
   }
 
   function onSettingsChanged() {
-    hassClient.onSettingsChanged();
-    hassController.loadEntities();
-
-    viewController.refresh();
+    Hass.loadScenesFromSettings();
+    Hass.client.refreshBaseUrl();
 
     Ui.requestUpdate();
   }
 
   function logout() {
-    hassClient.logout();
+    Hass.client.logout();
   }
 
   function login(callback) {
-    hassClient.login(callback);
+    Hass.client.login(callback);
   }
 
   function getStartView() {
     var startView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
-    System.println("loaded startview: " + startView);
-    if (startView == null && startView.equals(HassControlApp.SCENES_VIEW)) {
+
+    if (startView != null && startView.equals(HassControlApp.SCENES_VIEW)) {
       return HassControlApp.SCENES_VIEW;
     } else if (startView != null && startView.equals(HassControlApp.ENTITIES_VIEW)) {
       return HassControlApp.ENTITIES_VIEW;
@@ -85,23 +76,67 @@ class HassControlApp extends App.AppBase {
         HassControlApp.SCENES_VIEW
       );
     } else {
-      throw new InvalidValueException("unknown start view");
+      throw new InvalidValueException();
     }
   }
 
   function isLoggedIn() {
-    return hassClient.isLoggedIn();
+    return Hass.client.isLoggedIn();
   }
 
   function onStart(state) {}
 
   function onStop(state) {}
 
+  function getGlanceView() {
+    return [
+      new AppGlance()
+    ];
+  }
+
   // Return the initial view of your application here
   function getInitialView() {
+    viewController = new ViewController();
+    menu = new MenuController();
+
+    Hass.initClient();
+    Hass.loadStoredEntities();
+    Hass.loadScenesFromSettings();
+
+    if (isLoggedIn()) {
+      Hass.refreshAllEntities(true);
+    }
+
+    var deviceSettings = System.getDeviceSettings();
+    var view = null;
+    var delegate = null;
+
+    if (deviceSettings has :isGlanceModeEnabled) {
+      if (deviceSettings.isGlanceModeEnabled) {
+        var initialView = getStartView();
+
+        if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
+          var entityView = viewController.getEntityView();
+          view = entityView[0];
+          delegate = entityView[1];
+        }
+        if (initialView.equals(HassControlApp.SCENES_VIEW)) {
+          var sceneView = viewController.getSceneView();
+          view = sceneView[0];
+          delegate = sceneView[1];
+        }
+      }
+    }
+
+    if (view == null || delegate == null) {
+      view = new BaseView();
+      delegate = new BaseDelegate();
+    }
+
+
     return [
-      new BaseView(),
-      new BaseDelegate()
+      view,
+      delegate
     ];
   }
 }

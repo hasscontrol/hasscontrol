@@ -1,6 +1,7 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Application as App;
 using Toybox.System;
+using Hass;
 
 class MenuDelegate extends Ui.Menu2InputDelegate {
     function initialize() {
@@ -9,12 +10,6 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
 
     function onSelect(item) {
         var itemId = item.getId();
-
-        if (item instanceof EntityCheckbox) {
-            item.entity.setShow(item.isChecked());
-            App.getApp().hassController.persistEntities();
-            return;
-        }
 
         if (itemId == MenuController.MENU_SWITCH_TO_ENTITIES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
@@ -43,16 +38,12 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             App.getApp().menu.showSettingsMenu();
             return true;
         }
-        if (itemId == MenuController.MENU_SELECT_ENTITIES) {
-            App.getApp().menu.showEntitiesMenu();
-            return true;
-        }
         if (itemId == MenuController.MENU_SELECT_START_VIEW) {
             App.getApp().menu.showSelectStartViewMenu();
             return true;
         }
         if (itemId == MenuController.MENU_REFRESH_ENTITIES) {
-            App.getApp().hassController.fetchEntities();
+            Hass.importEntities();
             return true;
         }
 
@@ -82,5 +73,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
             return true;
         }
+
+        return false;
     }
 }

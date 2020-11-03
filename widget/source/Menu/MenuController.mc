@@ -1,5 +1,6 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
+using Hass;
 
 class MenuController {
     enum {
@@ -8,7 +9,6 @@ class MenuController {
         MENU_ENTER_SETTINGS,
         MENU_LOGIN,
 
-        MENU_SELECT_ENTITIES,
         MENU_SELECT_START_VIEW,
         MENU_REFRESH_ENTITIES,
         MENU_LOGOUT,
@@ -67,12 +67,6 @@ class MenuController {
         });
 
         menu.addItem(new Ui.MenuItem(
-            "Select entities",
-            "",
-            MenuController.MENU_SELECT_ENTITIES,
-            {}
-        ));
-        menu.addItem(new Ui.MenuItem(
             "Start View",
             App.getApp().getStartView(),
             MenuController.MENU_SELECT_START_VIEW,
@@ -80,7 +74,7 @@ class MenuController {
         ));
         menu.addItem(new Ui.MenuItem(
             "Refresh entities",
-            App.getApp().hassController.getGroup(),
+            Hass.getGroup(),
             MenuController.MENU_REFRESH_ENTITIES,
             {}
         ));
@@ -131,23 +125,6 @@ class MenuController {
             MenuController.MENU_BACK,
             {}
         ));
-
-        // var entities = App.getApp().hassController.getEntities();
-
-
-        Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
-    }
-
-    function showEntitiesMenu() {
-        var menu = new WatchUi.CheckboxMenu({
-            :title => "Select entities"
-        });
-
-        var entities = App.getApp().hassController.getEntities();
-
-        for (var i = 0; i < entities.size(); i++) {
-            menu.addItem(new EntityCheckbox(entities[i]));
-        }
 
         Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
     }

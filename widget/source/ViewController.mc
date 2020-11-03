@@ -2,6 +2,8 @@ using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using Toybox.Time;
 
+using Hass;
+
 class ViewController {
   hidden var _currentView;
   hidden var _loaderView;
@@ -11,13 +13,7 @@ class ViewController {
   hidden var _loginDelegate;
   hidden var _loaderActive;
   hidden var _loaderTimer;
-  hidden var _sceneView;
-  hidden var _sceneDelegate;
   hidden var _sceneController;
-
-  hidden var _entityView;
-  hidden var _entityDelegate;
-  hidden var _entityController;
 
   function initialize() {
     _loaderView = new ProgressView();
@@ -27,14 +23,6 @@ class ViewController {
     _loginDelegate = new LoginDelegate();
     _loaderActive = null;
     _loaderTimer = new Timer.Timer();
-
-    _sceneController = new SceneController();
-    _sceneView = new SceneView(_sceneController);
-    _sceneDelegate = new SceneDelegate(_sceneController);
-
-    _entityController = new EntityController();
-    _entityView = new EntityView(_entityController);
-    _entityDelegate = new EntityDelegate(_entityController);
   }
 
 
@@ -43,46 +31,75 @@ class ViewController {
   // vad händer om användaren stänger loader innan appen stänger loader?
 
 
-  function refresh() {
-    _sceneController.refreshScenes();
-  }
-
-
   // Since the progress bar is not a normal view,
   // We need to work around that it doesnt have onHide and onShow
   function isShowingLoader() {
     return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
   }
 
+  function getSceneView() {
+    var controller = new EntityListController(
+      [Hass.TYPE_SCENE]
+    );
+
+    return [
+      new EntityListView(controller),
+      new EntityListDelegate(controller)
+    ];
+  }
+
+  function getEntityView() {
+    var controller = new EntityListController(
+      [
+        Hass.TYPE_LIGHT,
+        Hass.TYPE_SWITCH,
+        Hass.TYPE_AUTOMATION
+      ]
+    );
+
+    return [
+      new EntityListView(controller),
+      new EntityListDelegate(controller)
+    ];
+  }
+
   function pushSceneView() {
+    var view = getSceneView();
+
     Ui.pushView(
-        _sceneView,
-        _sceneDelegate,
-        Ui.SLIDE_IMMEDIATE
+      view[0],
+      view[1],
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchSceneView() {
+    var view = getSceneView();
+
     Ui.switchToView(
-        _sceneView,
-        _sceneDelegate,
-        Ui.SLIDE_IMMEDIATE
+      view[0],
+      view[1],
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function pushEntityView() {
+    var view = getEntityView();
+
     Ui.pushView(
-        _entityView,
-        _entityDelegate,
-        Ui.SLIDE_IMMEDIATE
+      view[0],
+      view[1],
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
   function switchEntityView() {
+    var view = getEntityView();
+
     Ui.switchToView(
-        _entityView,
-        _entityDelegate,
-        Ui.SLIDE_IMMEDIATE
+      view[0],
+      view[1],
+      Ui.SLIDE_IMMEDIATE
     );
   }
 
@@ -118,7 +135,6 @@ class ViewController {
 
 
   function removeLoader() {
-    System.println("About to remove loader");
     if (isShowingLoader()) {
       // if loader is about to close too soon, we need to delay it
       if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
@@ -127,8 +143,6 @@ class ViewController {
       }
 
       Ui.popView(Ui.SLIDE_BLINK);
-    } else {
-      System.println("Loader is not visible");
     }
 
     _loaderActive = null;
@@ -158,6 +172,10 @@ class ViewController {
           message += "\nauth ";
         }
       }
+
+      if (error.context != null) {
+        message += "\n" + error.context;
+      }
     } else if (error instanceof String) {
       message = error;
     }
@@ -170,6 +188,7 @@ class ViewController {
 
     Ui.pushView(_errorView, _errorDelegate, Ui.SLIDE_IMMEDIATE);
 
+    System.println(error);
     Ui.requestUpdate();
   }
 

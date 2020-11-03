@@ -1,10 +1,14 @@
 <resources>
     <drawables>
         <bitmap id="LauncherIcon" filename="launcher_icon.png" />
+        <bitmap id="Scene" filename="scene.png" />
         <bitmap id="LightOff" filename="light_off.png" />
         <bitmap id="LightOn" filename="light_on.png" />
         <bitmap id="SwitchOn" filename="switch_on.png" />
         <bitmap id="SwitchOff" filename="switch_off.png" />
+        <bitmap id="AutomationOn" filename="automation_on.png" />
+        <bitmap id="AutomationOff" filename="automation_off.png" />
         <bitmap id="Unknown" filename="unknown.png" />
+        <bitmap id="SmileySad" filename="smiley_sad.png" />
     </drawables>
 </resources>
