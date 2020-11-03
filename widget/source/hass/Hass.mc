@@ -63,7 +63,7 @@ module Hass {
 
     for (var i = 0; i < _entities.size(); i++) {
       if (_entities[i].isExternal()) {
-        return;
+        continue;
       }
       entities.add(_entities[i].toDict());
     }
