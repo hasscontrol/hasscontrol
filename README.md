@@ -48,6 +48,8 @@ You can also use this field to "import" scenes if you don't want to create a gro
 
 I will describe this procedure in more detail below.
 
+***Note:*** *The default start view is filtered to scenes and will not show light, switches etc., the start view can be changed in the widget settings.*
+
 ### Logging in
 Once you have configured all settings in the ConnectIQ app, the next step will be to login.
 
