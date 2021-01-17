@@ -9,6 +9,7 @@ module Hass {
         TYPE_SCENE,
         TYPE_LIGHT,
         TYPE_SWITCH,
+        TYPE_SCRIPT,
         TYPE_AUTOMATION,
         TYPE_UNKNOWN
     }

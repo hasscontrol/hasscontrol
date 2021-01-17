@@ -59,6 +59,8 @@ module Hass {
         _mType = TYPE_SWITCH;
       } else if (_mId.find("automation.") != null) {
         _mType = TYPE_AUTOMATION;
+      } else if (_mId.find("script.") != null) {
+        _mType = TYPE_SCRIPT;
       } else {
         _mType = TYPE_UNKNOWN;
       }

@@ -53,7 +53,8 @@ class ViewController {
       [
         Hass.TYPE_LIGHT,
         Hass.TYPE_SWITCH,
-        Hass.TYPE_AUTOMATION
+        Hass.TYPE_AUTOMATION,
+        Hass.TYPE_SCRIPT
       ]
     );
 
