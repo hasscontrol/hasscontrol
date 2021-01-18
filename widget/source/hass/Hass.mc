@@ -125,7 +125,7 @@ module Hass {
 
   function _onReceiveEntity(err, data) {
     if (err != null) {
-      if (data[:context][:callback] != null) {
+      if (data != null && data[:context][:callback] != null) {
         data[:context][:callback].invoke(err, null);
       } else {
         App.getApp().viewController.showError(err);
@@ -269,7 +269,13 @@ module Hass {
       var entity = getEntity(data[:context][:entityId]);
 
       if (entity != null) {
-        entity.setState(data[:context][:state]);
+        var newState = data[:context][:state];
+
+        if (entity.getType() == Entity.TYPE_SCRIPT) {
+          newState = Entity.STATE_OFF;
+        }
+
+        entity.setState(newState);
 
         storeEntities();
         Ui.requestUpdate();
@@ -286,12 +292,17 @@ module Hass {
     var action = null;
     var loadingText = "Loading";
 
-    if (currentState == Entity.STATE_ON) {
-      action = Client.ENTITY_ACTION_TURN_OFF;
-      loadingText = "Turning off";
-    } else if (currentState == Entity.STATE_OFF) {
+    if (entity.getType() == Entity.TYPE_SCRIPT) {
       action = Client.ENTITY_ACTION_TURN_ON;
-      loadingText = "Turning on";
+      loadingText = "Running";
+    } else {
+      if (currentState == Entity.STATE_ON) {
+        action = Client.ENTITY_ACTION_TURN_OFF;
+        loadingText = "Turning off";
+      } else if (currentState == Entity.STATE_OFF) {
+        action = Client.ENTITY_ACTION_TURN_ON;
+        loadingText = "Turning on";
+      }
     }
 
     if (entity.getType() == Entity.TYPE_SCENE) {
@@ -303,6 +314,8 @@ module Hass {
       entityType = "switch";
     } else if (entity.getType() == Entity.TYPE_AUTOMATION) {
       entityType = "automation";
+    } else if (entity.getType() == Entity.TYPE_SCRIPT) {
+      entityType = "script";
     }
 
     App.getApp().viewController.showLoader(loadingText);

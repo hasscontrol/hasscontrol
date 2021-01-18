@@ -8,6 +8,7 @@
         <bitmap id="SwitchOff" filename="switch_off.png" />
         <bitmap id="AutomationOn" filename="automation_on.png" />
         <bitmap id="AutomationOff" filename="automation_off.png" />
+        <bitmap id="ScriptOff" filename="script_off.png" />
         <bitmap id="Unknown" filename="unknown.png" />
         <bitmap id="SmileySad" filename="smiley_sad.png" />
     </drawables>

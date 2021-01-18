@@ -1,12 +1,14 @@
 <resources>
     <properties>
         <property id="host" type="string">https://hassio.url</property>
+        <property id="accessToken" type="string"></property>
         <property id="scenes" type="string"></property>
         <property id="group" type="string"></property>
     </properties>
 
     <strings>
        <string id="host_title">Host: (https://hassio.url)</string>
+       <string id="access_token">Long-lived access token (optional)</string>
        <string id="scenes_title">Scenes: (scene1,scene2,scene3)</string>
        <string id="group_title">Group: (Group used for importing entities)</string>
     </strings>
@@ -14,6 +16,9 @@
     <settings>
         <setting propertyKey="@Properties.host" title="@Strings.host_title">
             <settingConfig type="url" />
+        </setting>
+        <setting propertyKey="@Properties.accessToken" title="@Strings.access_token">
+            <settingConfig type="alphaNumeric" />
         </setting>
         <setting propertyKey="@Properties.scenes" title="@Strings.scenes_title">
             <settingConfig type="alphaNumeric" />

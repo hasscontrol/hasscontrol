@@ -38,6 +38,8 @@ Open the widget settings in the ConnectIQ app.
 
 **Host**: This should be the url to the Home Assistant instance you would like to control.
 
+**Long-Lived access token**: If you prefer generating an access token in Home Assistant instead of login in thru the garmin app you can paste your token here.
+
 **Scenes**: Since scene names aren't that configurable in Home Assistant you can override the names in this box. Multiple overrides can be specified by separating them with a comma (,).
 
 So for example; If you have the scene `scene.good_bye` and `scene.movie` the configuration string could look like this: `good_bye=Good Bye, movie=Movie`, or `good_bye, movie`.
@@ -66,6 +68,8 @@ You should now be able to trigger your scenes.
 If you don't have any scenes, you can login by hold the menu button on your watch and logging in from them widget menu.
 
 If you don't see any login request on your phone. Restart the widget after you have opened the garmin Connect app and the watch has been connected.
+
+If you are having problems logging in or if the widget is logged out frequently, you can also generate a `Long-Lived access token` for your user in Home Assistant and paste it to the Connect IQ settings. This will bypass the normal login flow and use that token to communicate with Home Assistant.
 
 
 ### Group sync

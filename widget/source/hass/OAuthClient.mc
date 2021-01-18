@@ -30,6 +30,10 @@ module Hass {
             _isFetchingAccessToken = false;
         }
 
+        function onSettingsChanged() {
+            _credentials.loadLongLivedToken();
+        }
+
         function setAuthUrl(newUrl) {
             if (!_authUrl.equals(newUrl)) {
                 logout();
@@ -74,12 +78,7 @@ module Hass {
         }
 
         function isLoggedIn() {
-            var refreshToken = _credentials.getRefreshToken();
-            if (refreshToken != null) {
-                return true;
-            }
-
-            return false;
+            return _credentials.isLoggedIn();
         }
 
         function onReceiveTokens(code, data) {
