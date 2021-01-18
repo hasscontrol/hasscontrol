@@ -9,11 +9,36 @@ module Hass {
         hidden var _refreshToken;
         hidden var _accessToken;
         hidden var _expires;
+        hidden var _fixedAccessToken;
 
         function initialize() {
+            _fixedAccessToken = false;
             _refreshToken = null;
             _accessToken = null;
             _expires = null;
+
+            loadLongLivedToken();
+        }
+
+        function loadLongLivedToken() {
+            // If the user has specified an access token in settings
+            var accessToken = App.Properties.getValue("accessToken");
+            if (accessToken == null || accessToken.length() > 0 ) {
+                System.println("Initializing with long-lived access token");
+                _fixedAccessToken = true;
+                _accessToken = accessToken;
+            } else {
+                _fixedAccessToken = false;
+                _accessToken = null;
+            }
+        }
+
+        function isLoggedIn() {
+            if (_fixedAccessToken == true || _refreshToken != null) {
+                return true;
+            }
+
+            return false;
         }
 
         function getAccessToken() {
@@ -27,6 +52,11 @@ module Hass {
         }
 
         function setAccessToken(token) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to overwrite long lived access token");
+                return;
+            }
+
             _accessToken = token;
             Application.Storage.setValue("access_token", token);
         }
@@ -42,6 +72,11 @@ module Hass {
         }
 
         function setRefreshToken(token) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to set refresh token, while having long lived access token");
+                return;
+            }
+
             _refreshToken = token;
             Application.Storage.setValue("refresh_token", token);
         }
@@ -62,6 +97,11 @@ module Hass {
         }
 
         function setExpires(expiresIn) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to set expires, while having long lived access token");
+                return;
+            }
+
             if (expiresIn != null) {
                 _expires = Time.now().add(new Time.Duration(expiresIn));
                 Application.Storage.setValue("expires", _expires.value());
@@ -79,6 +119,11 @@ module Hass {
         }
 
         function hasExpired() {
+            // If we are using a long-lived access token we cant check if it has expired
+            if (_fixedAccessToken == true) {
+                return false;
+            }
+
             // add 1 minute as buffer
             var now = Time.now().add(new Time.Duration(60));
             var expires = getExpires();

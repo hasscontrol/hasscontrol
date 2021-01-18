@@ -39,7 +39,7 @@ class HassControlApp extends App.AppBase {
 
   function onSettingsChanged() {
     Hass.loadScenesFromSettings();
-    Hass.client.refreshBaseUrl();
+    Hass.client.onSettingsChanged();
 
     Ui.requestUpdate();
   }

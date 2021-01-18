@@ -55,6 +55,8 @@ module Hass {
         function onSettingsChanged() {
             refreshBaseUrl();
 
+            OAuthClient.onSettingsChanged();
+
             setAuthUrl(_baseUrl + AUTH_ENDPOINT);
             setTokenUrl(_baseUrl + TOKEN_ENDPOINT);
         }
