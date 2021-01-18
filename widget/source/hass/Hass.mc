@@ -125,7 +125,7 @@ module Hass {
 
   function _onReceiveEntity(err, data) {
     if (err != null) {
-      if (data[:context][:callback] != null) {
+      if (data != null && data[:context][:callback] != null) {
         data[:context][:callback].invoke(err, null);
       } else {
         App.getApp().viewController.showError(err);
