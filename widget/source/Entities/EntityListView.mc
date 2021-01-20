@@ -73,6 +73,8 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
   function onSelect() {
     var entity = _mController.getCurrentEntity();
     _mController.toggleEntity(entity);
+
+    return true;
   }
 
   function onNextPage() {
@@ -87,6 +89,8 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
 
     _mController.setIndex(index);
     Ui.requestUpdate();
+
+    return true;
   }
 
   function onPreviousPage() {
@@ -102,6 +106,7 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
     _mController.setIndex(index);
     Ui.requestUpdate();
 
+    return true;
   }
 }
 
