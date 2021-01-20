@@ -34,7 +34,7 @@ module Hass {
         }
 
         function isLoggedIn() {
-            if (_fixedAccessToken == true || _refreshToken != null) {
+            if (_fixedAccessToken == true || getRefreshToken() != null) {
                 return true;
             }
 
