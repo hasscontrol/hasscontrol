@@ -17,7 +17,13 @@ module Hass {
   }
 
   function getGroup() {
-    return App.Properties.getValue("group");
+    var group = App.Properties.getValue("group");
+
+    if (group.find("group.") == null) {
+      group = "group." + group;
+    }
+
+    return group;
   }
 
   function getEntities() {
