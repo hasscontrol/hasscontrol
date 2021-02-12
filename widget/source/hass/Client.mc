@@ -11,7 +11,9 @@ module Hass {
     class Client extends Hass.OAuthClient {
         static enum {
             ENTITY_ACTION_TURN_ON,
-            ENTITY_ACTION_TURN_OFF
+            ENTITY_ACTION_TURN_OFF,
+            ENTITY_ACTION_LOCK,
+            ENTITY_ACTION_UNLOCK
         }
 
         hidden var _baseUrl;
@@ -137,6 +139,12 @@ module Hass {
             } else if (action == Client.ENTITY_ACTION_TURN_OFF) {
                 serviceAction = "turn_off";
                 newState = "off";
+            } else if (action == Client.ENTITY_ACTION_LOCK) {
+                serviceAction = "lock";
+                newState = "locked";
+            } else if (action == Client.ENTITY_ACTION_UNLOCK) {
+                serviceAction = "unlock";
+                newState = "unlocked";
             }
 
             makeAuthenticatedWebRequest(

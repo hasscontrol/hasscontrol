@@ -17,7 +17,13 @@ module Hass {
   }
 
   function getGroup() {
-    return App.Properties.getValue("group");
+    var group = App.Properties.getValue("group");
+
+    if (group.find("group.") == null) {
+      group = "group." + group;
+    }
+
+    return group;
   }
 
   function getEntities() {
@@ -295,6 +301,14 @@ module Hass {
     if (entity.getType() == Entity.TYPE_SCRIPT) {
       action = Client.ENTITY_ACTION_TURN_ON;
       loadingText = "Running";
+    } else if (entity.getType() == Entity.TYPE_LOCK) {
+      if (currentState == Entity.STATE_UNLOCKED) {
+        action = Client.ENTITY_ACTION_LOCK;
+        loadingText = "Locking";
+      } else if (currentState == Entity.STATE_LOCKED) {
+        action = Client.ENTITY_ACTION_UNLOCK;
+        loadingText = "Unlocking";
+      }
     } else {
       if (currentState == Entity.STATE_ON) {
         action = Client.ENTITY_ACTION_TURN_OFF;
@@ -316,6 +330,8 @@ module Hass {
       entityType = "automation";
     } else if (entity.getType() == Entity.TYPE_SCRIPT) {
       entityType = "script";
+    } else if (entity.getType() == Entity.TYPE_LOCK) {
+      entityType = "lock";
     }
 
     App.getApp().viewController.showLoader(loadingText);

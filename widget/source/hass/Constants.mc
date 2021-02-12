@@ -3,6 +3,8 @@
 module Hass {
     const HASS_STATE_ON = "on";
     const HASS_STATE_OFF = "off";
+    const HASS_STATE_LOCKED = "locked";
+    const HASS_STATE_UNLOCKED = "unlocked";
     const HASS_STATE_UNKNOWN = "unknown";
 
     enum {
@@ -10,6 +12,7 @@ module Hass {
         TYPE_LIGHT,
         TYPE_SWITCH,
         TYPE_SCRIPT,
+        TYPE_LOCK,
         TYPE_AUTOMATION,
         TYPE_UNKNOWN
     }
@@ -17,6 +20,8 @@ module Hass {
     enum {
         STATE_ON,
         STATE_OFF,
+        STATE_LOCKED,
+        STATE_UNLOCKED,
         STATE_UNKNOWN
     }
 
