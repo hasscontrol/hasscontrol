@@ -20,6 +20,12 @@ module Hass {
       if (HASS_STATE_OFF.equals(stateInText)) {
         return STATE_OFF;
       }
+      if (HASS_STATE_LOCKED.equals(stateInText)) {
+        return STATE_LOCKED;
+      }
+      if (HASS_STATE_UNLOCKED.equals(stateInText)) {
+        return STATE_UNLOCKED;
+      }
 
       return STATE_UNKNOWN;
     }
@@ -30,6 +36,12 @@ module Hass {
       }
       if (state == STATE_OFF) {
         return HASS_STATE_OFF;
+      }
+      if (state == STATE_LOCKED) {
+        return HASS_STATE_LOCKED;
+      }
+      if (state == STATE_UNLOCKED) {
+        return HASS_STATE_UNLOCKED;
       }
 
       if (state == null) {
@@ -61,6 +73,8 @@ module Hass {
         _mType = TYPE_AUTOMATION;
       } else if (_mId.find("script.") != null) {
         _mType = TYPE_SCRIPT;
+      } else if (_mId.find("lock.") != null) {
+        _mType = TYPE_LOCK;
       } else {
         _mType = TYPE_UNKNOWN;
       }
@@ -92,6 +106,8 @@ module Hass {
         newState != null
         && newState != STATE_ON
         && newState != STATE_OFF
+        && newState != STATE_LOCKED
+        && newState != STATE_UNLOCKED
         && newState != STATE_UNKNOWN
       ) {
         throw new InvalidValueException("state must be a valid Entity state");

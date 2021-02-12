@@ -54,7 +54,8 @@ class ViewController {
         Hass.TYPE_LIGHT,
         Hass.TYPE_SWITCH,
         Hass.TYPE_AUTOMATION,
-        Hass.TYPE_SCRIPT
+        Hass.TYPE_SCRIPT,
+        Hass.TYPE_LOCK
       ]
     );
 
@@ -169,7 +170,7 @@ class ViewController {
         message += "\ncode ";
         message += error.responseCode;
 
-        if (error instanceof OAuthError) {
+        if (error instanceof Hass.OAuthError) {
           message += "\nauth ";
         }
       }
