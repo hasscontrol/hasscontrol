@@ -297,6 +297,11 @@ module Hass {
     var entityType = null;
     var action = null;
     var loadingText = "Loading";
+    
+    if (entity.getType() == Entity.TYPE_BINARY_SENSOR) {
+        // binary_sensor cannot be set, only read
+        return;
+    }
 
     if (entity.getType() == Entity.TYPE_SCRIPT) {
       action = Client.ENTITY_ACTION_TURN_ON;
