@@ -55,7 +55,8 @@ class ViewController {
         Hass.TYPE_SWITCH,
         Hass.TYPE_AUTOMATION,
         Hass.TYPE_SCRIPT,
-        Hass.TYPE_LOCK
+        Hass.TYPE_LOCK,
+        Hass.TYPE_INPUT_BOOLEAN
       ]
     );
 
