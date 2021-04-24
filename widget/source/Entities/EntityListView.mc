@@ -72,9 +72,6 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
 
   function onSelect() {
     var entity = _mController.getCurrentEntity();
-    if (entity == null) {
-        return false;
-    }
     _mController.toggleEntity(entity);
 
     return true;
@@ -208,6 +205,12 @@ class EntityListView extends Ui.View {
             drawable = WatchUi.loadResource(Rez.Drawables.SwitchOn);
         } else if (state == Hass.STATE_OFF) {
             drawable = WatchUi.loadResource(Rez.Drawables.SwitchOff);
+        }
+    } else if (type == Hass.TYPE_INPUT_BOOLEAN) {
+        if (state == Hass.STATE_ON) {
+            drawable = WatchUi.loadResource(Rez.Drawables.CheckboxOn);
+        } else if (state == Hass.STATE_OFF) {
+            drawable = WatchUi.loadResource(Rez.Drawables.CheckboxOff);
         }
     } else if (type == Hass.TYPE_AUTOMATION) {
         if (state == Hass.STATE_ON) {
