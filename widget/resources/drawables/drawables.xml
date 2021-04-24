@@ -6,6 +6,8 @@
         <bitmap id="LightOn" filename="light_on.png" />
         <bitmap id="SwitchOn" filename="switch_on.png" />
         <bitmap id="SwitchOff" filename="switch_off.png" />
+        <bitmap id="CheckboxOn" filename="checkbox_on.png" />
+        <bitmap id="CheckboxOff" filename="checkbox_off.png" />
         <bitmap id="AutomationOn" filename="automation_on.png" />
         <bitmap id="AutomationOff" filename="automation_off.png" />
         <bitmap id="LockLocked" filename="lock_locked.png" />
