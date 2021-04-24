@@ -121,7 +121,7 @@ If you done some modification to the group in Home Assistant, you can at any tim
 ### FAQ
 
 #### Error message: "Check settings, invalid url"
-Check if you are using correct url with `https` prefix. This a limitation comes from Garmin, only secure HTTPS communication is allowed.
+Check if you are using correct url with `https` prefix, because only secure HTTPS communication is allowed. This limitation comes from Garmin. 
 
 #### Some entities from my group are missing in my Garmin device
 Not all Home Assistant entity types are currently supported by HassControl, you should take a look at [supported entity types table](#supported-entity-types).
