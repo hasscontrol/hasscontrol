@@ -77,6 +77,8 @@ module Hass {
         _mType = TYPE_LOCK;
       } else if (_mId.find("binary_sensor.") != null) {
         _mType = TYPE_BINARY_SENSOR;
+      } else if (_mId.find("input_boolean.") != null) {
+        _mType = TYPE_INPUT_BOOLEAN;
       } else {
         _mType = TYPE_UNKNOWN;
       }

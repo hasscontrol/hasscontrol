@@ -337,6 +337,8 @@ module Hass {
       entityType = "script";
     } else if (entity.getType() == Entity.TYPE_LOCK) {
       entityType = "lock";
+    } else if (entity.getType() == Entity.TYPE_INPUT_BOOLEAN) {
+      entityType = "input_boolean";
     }
 
     App.getApp().viewController.showLoader(loadingText);
