@@ -72,6 +72,9 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
 
   function onSelect() {
     var entity = _mController.getCurrentEntity();
+    if (entity == null) {
+        return false;
+    }
     _mController.toggleEntity(entity);
 
     return true;
