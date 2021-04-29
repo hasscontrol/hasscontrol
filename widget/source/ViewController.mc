@@ -39,7 +39,9 @@ class ViewController {
 
   function getSceneView() {
     var controller = new EntityListController(
-      [Hass.TYPE_SCENE]
+      [
+//      Hass.TYPE_SCENE
+      ]
     );
 
     return [
@@ -51,11 +53,11 @@ class ViewController {
   function getEntityView() {
     var controller = new EntityListController(
       [
-        Hass.TYPE_LIGHT,
-        Hass.TYPE_SWITCH,
-        Hass.TYPE_AUTOMATION,
-        Hass.TYPE_SCRIPT,
-        Hass.TYPE_LOCK
+//        Hass.TYPE_LIGHT,
+//        Hass.TYPE_SWITCH,
+//        Hass.TYPE_AUTOMATION,
+//        Hass.TYPE_SCRIPT,
+//        Hass.TYPE_LOCK
       ]
     );
 
@@ -121,12 +123,16 @@ class ViewController {
 
   }
  
-  function showLoader(text) {
+  function showLoader(rezString) {
     if (isShowingLoader()) {
       Ui.popView(Ui.SLIDE_IMMEDIATE);
     }
 
-    _loaderView.setDisplayString(text);
+    try {
+        _loaderView.setDisplayString(Ui.loadResource(rezString));
+    } catch (e instanceof UnexpectedTypeException) {
+        _loaderView.setDisplayString(rezString);
+    }
 
     Ui.pushView(_loaderView, null, Ui.SLIDE_BLINK);
 

@@ -1,11 +1,15 @@
 <strings>
     <string id="AppName">HassControl</string>
-
-
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
-
-
+    <!-- Loader Messages -->
+    <string id="LoaderRefreshing">Refreshing</string>
+    <string id="LoaderLoading">Loading</string>
+    <string id="LoaderRunning">Running</string>
+    <string id="LoaderUnlocking">Unlocking</string>
+    <string id="LoaderLocking">Locking</string>
+    <string id="LoaderTurningOff">Turning off</string>
+    <string id="LoaderTurningOn">Turning on</string>
 
     <!-- ERROR -->
     <string id="Error_Unknown">Unknown error</string>

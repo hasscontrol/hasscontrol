@@ -58,7 +58,7 @@ class MenuController {
             ));
         }
 
-        Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
+        return Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
         }
 
     function showSettingsMenu() {
@@ -89,7 +89,7 @@ class MenuController {
     }
 
     function showSelectStartViewMenu() {
-        var menu = new WatchUi.Menu2({
+        var menu = new Ui.Menu2({
             :title => "Start view"
         });
 

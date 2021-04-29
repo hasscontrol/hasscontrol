@@ -1,324 +1,324 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
+using Toybox.Lang;
 using Hass;
 
 class EntityListController {
-  hidden var _mEntities;
-  hidden var _mTypes;
-  hidden var _mHassModel;
-  hidden var _mIndex;
+    hidden var _mEntities;
+    hidden var _mTypes;
+    hidden var _mIndex;
 
-  function initialize(types) {
-    _mTypes = types;
-    _mIndex = 0;
-
-    refreshEntities();
-  }
-
-  function refreshEntities() {
-    if (_mTypes != null) {
-      _mEntities = Hass.getEntitiesByTypes(_mTypes);
-    } else {
-      _mEntities = Hass.getEntities();
+    function initialize(types) {
+        _mTypes = types;
+        _mIndex = 0;
+        refreshEntities();
     }
 
-    if (_mIndex >= _mEntities.size()) {
-      _mIndex = _mEntities.size() - 1;
-    } else if (_mIndex < 0) {
-      _mIndex = 0;
-    }
-  }
-
-  function getCurrentEntity() {
-    if (_mEntities.size() == 0) {
-      return null;
+    /**
+    * Returns index of focused entity/page
+    */
+    function getIndex() {
+        return _mIndex;
     }
 
-    return _mEntities[_mIndex];
-  }
-
-  function setIndex(index) {
-    if (!(index instanceof Number)) {
-      throw new InvalidValueException();
+    /**
+    * Returns number of all imported entities
+    */
+    function getCount() {
+        return _mEntities.size();
     }
-    _mIndex = index;
-  }
 
-  function getIndex() {
-    return _mIndex;
-  }
+    /**
+    * Loads imported entity ids from HASS 
+    */
+    function refreshEntities() {
+        _mEntities = Hass.getImportedEntities();
 
-  function getCount() {
-    return _mEntities.size();
-  }
+        if (_mIndex >= getCount()) {
+            _mIndex = 0;
+        }
+    }
+    
+    /**
+    * Returns current entity id
+    */
+    function getCurrentEntityId() {
+        return _mEntities[_mIndex];
+    }
 
-  function toggleEntity(entity) {
-    Hass.toggleEntityState(entity);
-  }
+    /**
+    * Returns current entity type
+    */    
+    function getCurrentEntityType() {
+    	if (getCount() == 0) {return null;}
+        return _mEntities[_mIndex].substring(0, _mEntities[_mIndex].find("."));
+    }
+
+    /**
+    * Returns attributes of current entity
+    */
+    function getCurrentEntityAttributes() {
+        if (getCount() == 0) {return null;}
+        return Hass.getEntityState(_mEntities[_mIndex]);
+    }
+    
+    /**
+    * Sets next entity index, rollover is handled
+    */
+    function setNextPage() {
+        _mIndex += 1;
+        if (_mIndex > getCount() - 1) {_mIndex = 0;}
+    }
+    
+    /**
+    * Sets previous entity index, rollover is handled
+    */
+    function setPreviousPage() {
+        _mIndex -= 1;
+        if (_mIndex < 0) {_mIndex = getCount() - 1;}
+    }
+
+    /**
+    *
+    */
+    function executeCurrentEntity() {
+    //TODO ADD open extended view or just toggle
+        if (getCount() == 0) {
+            return false;
+        }
+System.println(_mEntities[_mIndex]);
+        return Hass.toggleEntityState(_mEntities[_mIndex], getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
+    }
 }
 
 class EntityListDelegate extends Ui.BehaviorDelegate {
-  hidden var _mController;
+    hidden var _mController;
 
-  function initialize(controller) {
-    BehaviorDelegate.initialize();
-    _mController = controller;
-  }
-
-  function onMenu() {
-    App.getApp().menu.showRootMenu();
-  }
-
-  function onSelect() {
-    var entity = _mController.getCurrentEntity();
-    _mController.toggleEntity(entity);
-
-    return true;
-  }
-
-  function onNextPage() {
-    var index = _mController.getIndex();
-    var count = _mController.getCount();
-
-    index += 1;
-
-    if (index > count - 1) {
-      index = 0;
+    function initialize(controller) {
+        BehaviorDelegate.initialize();
+        _mController = controller;
     }
 
-    _mController.setIndex(index);
-    Ui.requestUpdate();
-
-    return true;
-  }
-
-  function onPreviousPage() {
-    var index = _mController.getIndex();
-    var count = _mController.getCount();
-
-    index -= 1;
-
-    if (index < 0) {
-      index = count - 1;
+    function onMenu() {
+        return App.getApp().menu.showRootMenu();
     }
 
-    _mController.setIndex(index);
-    Ui.requestUpdate();
+    function onSelect() {
+        return _mController.executeCurrentEntity();
+    }
 
-    return true;
-  }
+    function onNextPage() {
+        _mController.setNextPage();
+        Ui.requestUpdate();
+        return true;
+    }
+
+    function onPreviousPage() {
+        _mController.setPreviousPage();
+        Ui.requestUpdate();
+        return true;
+    }
 }
 
 class EntityListView extends Ui.View {
-  hidden var _mController;
-  hidden var _mLastIndex;
-  hidden var _mTimer;
-  hidden var _mTimerActive;
-  hidden var _mShowBar;
+    hidden var _mController;
+    hidden var _mLastIndex;
+    hidden var _mTimerScrollBar;
+    hidden var _mTimerScrollBarActive;
+    hidden var _mShowScrollBar;
 
-  function initialize(controller) {
-    View.initialize();
-    _mController = controller;
-    _mLastIndex = null;
-    _mTimer = new Timer.Timer();
-    _mTimerActive = false;
-    _mShowBar = false;
-  }
+    function initialize(controller) {
+        View.initialize();
+        _mController = controller;
+        _mLastIndex = null;
+        _mTimerScrollBar = new Timer.Timer();
+        _mTimerScrollBarActive = false;
+        _mShowScrollBar = false;
+    }
 
-  function onLayout(dc) {
-    setLayout([]);
-  }
+    function onShow() {
+        _mController.refreshEntities();
+    }
 
-  function drawNoEntityText(dc) {
-    var vh = dc.getHeight();
-    var vw = dc.getWidth();
+    /**
+    * Draws entity icon based on its state
+    */
+    function drawEntityIcon(dc, state, type) {
+        var vh = dc.getHeight();
+        var vw = dc.getWidth();
+        var cvw = vw / 2;
+        var drawable = null;
 
-    var cvh = vh / 2;
-    var cvw = vw / 2;
-
-    var SmileySad = Ui.loadResource(Rez.Drawables.SmileySad);
-
-    dc.drawBitmap(
-      cvw - (SmileySad.getHeight() / 2),
-      (vh * 0.3) - (SmileySad.getHeight() / 2),
-      SmileySad
-    );
-
-    var font = Graphics.FONT_MEDIUM;
-    var text = Ui.loadResource(Rez.Strings.NoEntities);
-    text = Graphics.fitTextToArea(text, font, vw * 0.9, vh * 0.9, true);
-
-    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    dc.drawText(cvh, cvw, font, text, Graphics.TEXT_JUSTIFY_CENTER);
-  }
-
-  function drawEntityText(dc, entity) {
-    var vh = dc.getHeight();
-    var vw = dc.getWidth();
-
-    var cvh = vh / 2;
-    var cvw = vw / 2;
-
-    var fontHeight = vh * 0.3;
-    var fontWidth = vw * 0.80;
-
-    var text = entity.getName();
-
-    var fonts = [Graphics.FONT_MEDIUM, Graphics.FONT_TINY, Graphics.FONT_XTINY];
-    var font = fonts[0];
-
-    for (var i = 0; i < fonts.size(); i++) {
-        var truncate = i == fonts.size() - 1;
-
-        var tempText = Graphics.fitTextToArea(text, fonts[i], fontWidth, fontHeight, truncate);
-
-        if (tempText != null) {
-            text = tempText;
-            font = fonts[i];
-            break;
+        switch(type) {
+            case Hass.ENTITY_TYPE_AUTOMATION:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff);
+                break;
+            case Hass.ENTITY_TYPE_BINARY_SENSOR:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                break;
+            case Hass.ENTITY_TYPE_INPUT_BOOLEAN:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                break;
+            case Hass.ENTITY_TYPE_LIGHT:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.LightOn : Rez.Drawables.LightOff);
+                break;
+            case Hass.ENTITY_TYPE_LOCK:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_LOCKED) ? Rez.Drawables.LockLocked : Rez.Drawables.LockUnlocked);
+                break;
+            case Hass.ENTITY_TYPE_SCENE:
+                drawable = WatchUi.loadResource(Rez.Drawables.Scene);
+                break;
+            case Hass.ENTITY_TYPE_SCRIPT:
+                drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
+                break;
+            case Hass.ENTITY_TYPE_SWITCH:
+                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.SwitchOn : Rez.Drawables.SwitchOff);
+                break;
+            default:
+                drawable = WatchUi.loadResource(Rez.Drawables.Unknown);
         }
+        
+        dc.drawBitmap(cvw - (drawable.getHeight() / 2), (vh * 0.3) - (drawable.getHeight() / 2), drawable);
     }
 
-    dc.drawText(cvh, cvw * 1.1, font, text, Graphics.TEXT_JUSTIFY_CENTER);
-  }
+    /**
+    * Common draw text function
+    */
+    function _drawText(dc, text, hP, fonts) {
+        var vh = dc.getHeight();
+        var vw = dc.getWidth();
+        var cvh = vh / 2;
+        var cvw = vw / 2;
+        var fontHeight = vh * 0.3;
+        var fontWidth = vw * 0.80;
+        var font = fonts[0];
 
-  function drawIcon(dc, entity) {
-    var vh = dc.getHeight();
-    var vw = dc.getWidth();
+        for (var i = 0; i < fonts.size(); i++) {
+            var truncate = i == fonts.size() - 1;
+            var tempText = Graphics.fitTextToArea(text, fonts[i], fontWidth, fontHeight, truncate);
 
-    var cvw = vw / 2;
-
-    var drawable = null;
-
-    var type = entity.getType();
-    var state = entity.getState();
-
-    if (type == Hass.TYPE_LIGHT) {
-        if (state == Hass.STATE_ON) {
-            drawable = WatchUi.loadResource(Rez.Drawables.LightOn);
-        } else if (state == Hass.STATE_OFF) {
-            drawable = WatchUi.loadResource(Rez.Drawables.LightOff);
+            if (tempText != null) {
+                text = tempText;
+                font = fonts[i];
+                break;
+            }
         }
-    } else if (type == Hass.TYPE_SWITCH) {
-        if (state == Hass.STATE_ON) {
-            drawable = WatchUi.loadResource(Rez.Drawables.SwitchOn);
-        } else if (state == Hass.STATE_OFF) {
-            drawable = WatchUi.loadResource(Rez.Drawables.SwitchOff);
+
+        dc.drawText(cvw, cvh * hP, font, text, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+    
+    /**
+    * Draws entity state instead of icon
+    */
+    function drawEntityState(dc, text) {
+        _drawText(dc, text, 0.5, [Graphics.FONT_MEDIUM, Graphics.FONT_TINY, Graphics.FONT_XTINY]);
+    }
+
+    /**
+    * Draws entity name
+    */
+    function drawEntityName(dc, text) {
+        _drawText(dc, text, 1.1, [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_TINY]);
+    }
+
+    /**
+    * Draws no entity icon and text
+    */
+    function drawNoEntityIconText(dc) {
+        var vh = dc.getHeight();
+        var vw = dc.getWidth();
+        var cvh = vh / 2;
+        var cvw = vw / 2;
+        var SmileySad = Ui.loadResource(Rez.Drawables.SmileySad);
+
+        dc.drawBitmap(cvw - (SmileySad.getHeight() / 2), (vh * 0.3) - (SmileySad.getHeight() / 2), SmileySad);
+
+        var font = Graphics.FONT_MEDIUM;
+        var text = Ui.loadResource(Rez.Strings.NoEntities);
+        text = Graphics.fitTextToArea(text, font, vw * 0.9, vh * 0.9, true);
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.drawText(cvw, cvh, font, text, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    /**
+    * Draws scroll bar
+    */
+    function drawScrollBar(dc) {
+        var vh = dc.getHeight();
+        var vw = dc.getWidth();
+        var cvh = vh / 2;
+        var cvw = vw / 2;
+        
+        var radius = cvh - 10;
+        var padding = 1;
+        var topDegreeStart = 130;
+        var bottomDegreeEnd = 230;
+        var numEntities = _mController.getCount();
+        var currentIndex = _mController.getIndex();
+        var barSize = ((bottomDegreeEnd - padding) - (topDegreeStart + padding)) / numEntities;
+        var barStart = (topDegreeStart + padding) + (barSize * currentIndex);
+
+        var attr = Graphics.ARC_COUNTER_CLOCKWISE;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.setPenWidth(10);
+        dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.setPenWidth(6);
+        dc.drawArc(cvw, cvh, radius, attr, barStart, barStart + barSize);
+    }
+
+    /**
+    * Hides scroll bar when timer expires
+    */
+    function onTimerDone() {
+        _mTimerScrollBarActive = false;
+        _mShowScrollBar = false;
+        Ui.requestUpdate();
+    }
+
+    /**
+    * Checks if scroll bar should be showed and draws it
+    */
+    function drawScrollBarIfNeeded(dc) {
+        var index = _mController.getIndex();
+
+        if (_mTimerScrollBarActive && _mShowScrollBar == true) {
+            return;
         }
-    } else if (type == Hass.TYPE_AUTOMATION) {
-        if (state == Hass.STATE_ON) {
-            drawable = WatchUi.loadResource(Rez.Drawables.AutomationOn);
-        } else if (state == Hass.STATE_OFF) {
-            drawable = WatchUi.loadResource(Rez.Drawables.AutomationOff);
+
+        if (_mLastIndex != index) {
+            if (_mTimerScrollBarActive) {
+                _mTimerScrollBar.stop();
+            }
+            _mShowScrollBar = true;
+            drawScrollBar(dc);
+            _mTimerScrollBar.start(method(:onTimerDone), 1000, false);
         }
-    } else if (type == Hass.TYPE_LOCK) {
-        if (state == Hass.STATE_LOCKED) {
-            drawable = WatchUi.loadResource(Rez.Drawables.LockLocked);
-        } else if (state == Hass.STATE_UNLOCKED) {
-            drawable = WatchUi.loadResource(Rez.Drawables.LockUnlocked);
+
+        _mLastIndex = index;
+    }
+
+    function onUpdate(dc) {    
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.clear();
+        
+        var entity = _mController.getCurrentEntityAttributes();
+        var entityType = _mController.getCurrentEntityType();
+        
+        if (entity == null) {
+            drawNoEntityIconText(dc);
+            return;
         }
-    } else if (type == Hass.TYPE_SCRIPT) {
-      drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
-    } else if (type == Hass.TYPE_SCENE) {
-      drawable = WatchUi.loadResource(Rez.Drawables.Scene);
+    
+        if (entityType.equals("sensor")) {
+            drawEntityState(dc, entity["state"] + " " + entity["attributes"]["unit_of_measurement"]);
+        } else {
+            drawEntityIcon(dc, entity["state"], entityType);
+        }
+        drawEntityName(dc, entity["attributes"]["friendly_name"]);
+        drawScrollBarIfNeeded(dc);
     }
-
-    if (drawable == null) {
-        drawable = WatchUi.loadResource(Rez.Drawables.Unknown);
-    }
-
-    dc.drawBitmap(
-      cvw - (drawable.getHeight() / 2),
-      (vh * 0.3) - (drawable.getHeight() / 2),
-      drawable
-    );
-  }
-
-  function drawPageBar(dc) {
-    var numEntities = _mController.getCount();
-    var currentIndex = _mController.getIndex();
-
-    var vh = dc.getHeight();
-    var vw = dc.getWidth();
-
-    var cvh = vh / 2;
-    var cvw = vw / 2;
-
-    var radius = cvh - 10;
-
-    var attr = Graphics.ARC_COUNTER_CLOCKWISE;
-
-    var padding = 1;
-    var topDegreeStart = 130;
-    var bottomDegreeEnd = 230;
-
-    var barSize = ((bottomDegreeEnd - padding) - (topDegreeStart + padding)) / numEntities;
-
-    var barStart = (topDegreeStart + padding) + (barSize * currentIndex);
-
-    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    dc.setPenWidth(10);
-    dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
-
-    dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-    dc.setPenWidth(6);
-    dc.drawArc(cvw, cvh, radius, attr, barStart, barStart + barSize);
-  }
-
-  function onTimerDone() {
-    _mTimerActive = false;
-    _mShowBar = false;
-    Ui.requestUpdate();
-  }
-
-  function shouldShowBar() {
-    var index = _mController.getIndex();
-
-    if (_mTimerActive && _mShowBar == true) {
-      return;
-    }
-
-    if (_mLastIndex != index) {
-      if (_mTimerActive) {
-        _mTimer.stop();
-      }
-      _mShowBar = true;
-      _mTimer.start(method(:onTimerDone), 1000, false);
-    }
-
-    _mLastIndex = index;
-  }
-
-  function onUpdate(dc) {
-    View.onUpdate(dc);
-
-    _mController.refreshEntities();
-
-    var entity = _mController.getCurrentEntity();
-
-    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    dc.clear();
-
-    if (entity == null) {
-      drawNoEntityText(dc);
-      return;
-    }
-
-    shouldShowBar();
-
-    drawEntityText(dc, entity);
-    drawIcon(dc, entity);
-
-    if (_mShowBar) {
-      drawPageBar(dc);
-    }
-
-    return;
-
-
-
-    var WHITE = Graphics.COLOR_WHITE;
-    var BLACK = Graphics.COLOR_BLACK;
-  }
 }

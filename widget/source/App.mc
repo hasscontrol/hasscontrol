@@ -38,7 +38,7 @@ class HassControlApp extends App.AppBase {
   }
 
   function onSettingsChanged() {
-    Hass.loadScenesFromSettings();
+//    Hass.loadScenesFromSettings();
     Hass.client.onSettingsChanged();
 
     Ui.requestUpdate();
@@ -100,11 +100,11 @@ class HassControlApp extends App.AppBase {
     menu = new MenuController();
 
     Hass.initClient();
-    Hass.loadStoredEntities();
-    Hass.loadScenesFromSettings();
+//    Hass.loadStoredEntities();
+//    Hass.loadScenesFromSettings();
 
     if (isLoggedIn()) {
-      Hass.refreshAllEntities(true);
+//      Hass.refreshAllEntities(true);
     }
 
     var deviceSettings = System.getDeviceSettings();

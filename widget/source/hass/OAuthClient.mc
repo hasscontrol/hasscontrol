@@ -245,7 +245,7 @@ module Hass {
                 }
             }
 
-            System.println(context);
+//            System.println(context);
 
             context[:responseCallback].invoke(error, {
                 :responseCode => responseCode,

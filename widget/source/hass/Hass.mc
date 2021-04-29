@@ -5,389 +5,220 @@ using Toybox.System;
 using Utils;
 
 module Hass {
-  const STORAGE_KEY = "Hass/entities";
+    const STORAGE_KEY = "Hass/entities";
+    //TODO STORE IMPORTED ENTITIES IN STORAGE
+    const supportedEntityTypes = [
+        ENTITY_TYPE_AUTOMATION,
+        ENTITY_TYPE_BINARY_SENSOR,
+        ENTITY_TYPE_INPUT_BOOLEAN,
+        ENTITY_TYPE_LIGHT,
+        ENTITY_TYPE_LOCK,
+        ENTITY_TYPE_SCENE,
+        ENTITY_TYPE_SCRIPT,
+        ENTITY_TYPE_SENSOR,
+        ENTITY_TYPE_SWITCH
+    ];
+    var client = null;
+    var _importedEntities = [];
+    var _entityStates = {};
+    var _entityToRefreshCounter = 0;
 
-  var client = null;
-  var _entities = new [0];
-  var _entitiesToRefresh = new [0];
-  var _continueRefreshOnError = false;
-
-  function initClient() {
-    client = new Client();
-  }
-
-  function getGroup() {
-    var group = App.Properties.getValue("group");
-
-    if (group.find("group.") == null) {
-      group = "group." + group;
+    function initClient() {
+        client = new Client();
     }
 
-    return group;
-  }
-
-  function getEntities() {
-    return _entities;
-  }
-
-  function getEntitiesByTypes(types) {
-    var entities = new [0];
-
-    for (var eI = 0; eI < _entities.size(); eI++) {
-      var match = false;
-
-      for (var tI = 0; tI < types.size(); tI++) {
-        if (_entities[eI].getType() == types[tI]) {
-          match = true;
-          break;
+	/**
+	* Returns name of group from settings set through Garmin Connect
+	*/
+    function getGroup() {
+        var group = App.Properties.getValue("group");
+        if (group.find("group.") == null) {
+            group = "group." + group;
         }
-      }
-
-      if (match) {
-        entities.add(_entities[eI]);
-      }
+        return group;
     }
-
-    return entities;
-  }
-
-  function getEntity(id) {
-    var entity = null;
-
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].getId().equals(id)) {
-        entity = _entities[i];
-        break;
-      }
+  
+    /**
+    * Returns all attributes of a single entity
+    */
+    function getEntityState(entityId) {
+        return _entityStates.get(entityId);
     }
-
-    return entity;
-  }
-
-  function storeEntities() {
-    var entities = new [0];
-
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].isExternal()) {
-        continue;
-      }
-      entities.add(_entities[i].toDict());
+  
+    /**
+    * Returns list of imported entity ids
+    */
+    function getImportedEntities() {
+        return _importedEntities;
     }
-
-    App.Storage.setValue(STORAGE_KEY, entities);
-  }
-
-  function loadScenesFromSettings() {
-    var scenes = Utils.getScenesFromSettings();
-
-    // first remove all external scenes to make sure we are not persisting any old scenes
-    var entitiesToRemove = new [0];
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].isExternal()) {
-        entitiesToRemove.add(_entities[i]);
-      }
-    }
-    for (var i = 0; i < entitiesToRemove.size(); i++) {
-      _entities.remove(entitiesToRemove[i]);
-    }
-    entitiesToRemove = null;
-
-    for (var i = 0; i < scenes.size(); i++) {
-      var entity = getEntity(scenes[i][0]);
-
-      if (entity != null) {
-        // We only set the name if it's different than the id
-        if (!scenes[i][0].equals(scenes[i][1])) {
-          entity.setName(scenes[i][1]);
+    
+    /**
+    * Helper callback method used for extracting data from single
+    * entity response.
+    */
+    function _onRecievedGeneralEntity(err, data) {
+        if (err != null) {
+            if (data != null && data[:context][:callback] != null) {
+                data[:context][:callback].invoke(err, null);
+            } else {
+                App.getApp().viewController.showError(err);
+            }
+            return;
         }
-      } else {
-        _entities.add(new Entity({
-          :id => scenes[i][0],
-          :name => scenes[i][1],
-          :state => "scening",
-          :ext => true
-        }));
-      }
+        
+        var entityDict = {"state" => data[:body]["state"],
+                          "attributes" => data[:body]["attributes"],
+                          "last_changed" => data[:body]["last_changed"]};        
+        _entityStates.put(data[:body]["entity_id"], entityDict);
     }
-  }
-
-  function loadStoredEntities() {
-    var entities = App.Storage.getValue(STORAGE_KEY);
-
-    _entities = new [0];
-
-    if (entities == null) {
-      return;
+  
+    /**
+    * Callback when single entity state is returned form HASS
+    */
+    function _onReceivedSingleEntity(err, data) {
+        _onRecievedGeneralEntity(err, data);
     }
-
-    for (var i = 0; i < entities.size(); i++) {
-      _entities.add(Entity.createFromDict(entities[i]));
-    }
-
-    loadScenesFromSettings();
-
-    System.println("Loaded entities: " + _entities);
-  }
-
-  function _onReceiveEntity(err, data) {
-    if (err != null) {
-      if (data != null && data[:context][:callback] != null) {
-        data[:context][:callback].invoke(err, null);
-      } else {
-        App.getApp().viewController.showError(err);
-      }
-      return;
-    }
-
-    var name = null;
-    var state = null;
-
-    if (data != null && data[:body] != null) {
-      if (data[:body]["attributes"] != null) {
-        name = data[:body]["attributes"]["friendly_name"];
-      }
-      state = data[:body]["state"];
-    }
-
-    var entity = getEntity(data[:body]["entity_id"]);
-
-    if (name != null) {
-      entity.setName(name);
-    }
-
-    if (state != null) {
-      entity.setState(state);
-    } else {
-      entity.setState(Entity.STATE_UNKNOWN);
-    }
-
-    if (data[:context][:callback] != null) {
-      data[:context][:callback].invoke(null, entity);
-    }
-  }
-
-  function refreshEntity(entity, callback) {
-    client.getEntity(
-      entity.getId(),
-      {
-        :entity => entity,
-        :callback => callback
-      },
-      Utils.method(Hass, :_onReceiveEntity)
-    );
-  }
-
-  function _refreshPendingEntities(error, noop) {
-    if (error != null && !_continueRefreshOnError) {
-      App.getApp().viewController.removeLoader();
-      App.getApp().viewController.showError(error);
-
-      // We need to finalize with reading the scenes from settings again,
-      // so that the name config takes precedence
-      loadScenesFromSettings();
-
-      storeEntities();
-
-      Ui.requestUpdate();
-      return;
-    }
-
-    if (_entitiesToRefresh.size() > 0) {
-      var entity = _entitiesToRefresh[0];
-
-      _entitiesToRefresh.remove(entity);
-
-      refreshEntity(entity, Utils.method(Hass, :_refreshPendingEntities));
-    } else {
-      // We need to finalize with reading the scenes from settings again,
-      // so that the name config takes precedence
-      loadScenesFromSettings();
-
-      storeEntities();
-
-      Ui.requestUpdate();
-
-      App.getApp().viewController.removeLoader();
-    }
-  }
-
-  function refreshAllEntities(continueOnError) {
-    _entitiesToRefresh = new [0];
-    _continueRefreshOnError = continueOnError == true;
-
-    for (var i = 0; i < _entities.size(); i++) {
-      _entitiesToRefresh.add(_entities[i]);
-    }
-
-    _refreshPendingEntities(null, null);
-  }
-
-  function _onReceiveEntities(err, data) {
-    if (err == null) {
-      var entities = data[:body]["attributes"]["entity_id"];
-
-      _entities = new [0];
-
-      for (var i = 0; i < entities.size(); i++) {
-        var entity = getEntity(entities[i]);
-
-        if (entity == null) {
-          _entities.add(new Entity({
-            :id => entities[i],
-            :name => entities[i],
-            :state => null
-          }));
+    
+    /**
+    * Callback when state of entity is returned form HASS.
+    * This function is used only when refreshing all imported
+    * entities at once. We have to call one web request after
+    * another, otherwise the app will crash.
+    */
+    function _onReceivedRefreshedImportedEntity(err, data) {
+        _onRecievedGeneralEntity(err, data);
+        
+        _entityToRefreshCounter++;
+        if (_entityToRefreshCounter < _importedEntities.size()) {
+            // we have to keep refreshing until we achieve end of list
+            client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
         } else {
-          entity.setExternal(false);
+            // all entities are refreshed, remove loader
+            App.getApp().viewController.removeLoader();
         }
-      }
-
-      loadScenesFromSettings();
-
-      refreshAllEntities(false);
-    } else {
-      App.getApp().viewController.removeLoader();
-      App.getApp().viewController.showError(err);
     }
-  }
+  
+    /**
+    * Requests state of single entity from HASS
+    */
+    function refreshSingleEntity(entityId) {
+        client.getEntity(entityId, null, Utils.method(Hass, :_onReceivedSingleEntity));
+    }
+  
+    /**
+    * Requests state of all imported entities from HASS
+    */
+  	function refreshImportedEntities() {
+  	    _entityToRefreshCounter = 0;
+  	    _entityStates = {};
+  	    client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
+  	}
 
-  function importEntities() {
-    var group = getGroup();
+	/**
+	* Callback called when HASS returns list with entities from the group
+	*/
+    function _onReceivedGroupEntities(err, data) {
+        if (err) {
+            App.getApp().viewController.removeLoader();
+            App.getApp().viewController.showError(err);
+            return;
+        }
+  
+        _importedEntities = new [0];
+        var recvEntities = data[:body]["attributes"]["entity_id"];
+        for (var i = 0; i < recvEntities.size(); i++) {
+      	    var recvEntityType = recvEntities[i].substring(0, recvEntities[i].find("."));
+      	    if (supportedEntityTypes.indexOf(recvEntityType) != -1) {
+      	        _importedEntities.add(recvEntities[i]);
+      	    }
+      	}
 
-    if (group == null || group.find("group.") == null) {
-      App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
-      return;
+        System.print("Imported entities from the group: ");
+        System.println(_importedEntities);
+
+        refreshImportedEntities();
     }
 
-    App.getApp().viewController.showLoader("Refreshing");
-
-    client.getEntity(group, null, Utils.method(Hass, :_onReceiveEntities));
-  }
-
-  function onToggleEntityStateCompleted(error, data) {
-    if (error != null) {
-      App.getApp().viewController.removeLoaderImmediate();
-      App.getApp().viewController.showError(error);
-      return;
+    /*
+    * Imports list of entities from HASS group
+    */	
+    function importGroupEntities() {
+        var group = getGroup();
+	
+        if (group == null) {
+            App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
+            return;
+        }
+	
+        App.getApp().viewController.showLoader(Rez.Strings.LoaderRefreshing);
+        client.getEntity(group, null, Utils.method(Hass, :_onReceivedGroupEntities));
     }
 
-    if (data[:context][:state] != null) {
-      var entity = getEntity(data[:context][:entityId]);
-
-      if (entity != null) {
-        var newState = data[:context][:state];
-
-        if (entity.getType() == Entity.TYPE_SCRIPT) {
-          newState = Entity.STATE_OFF;
+    /**
+    * Callback called when state/scene/etc. is toggled successfully
+    */
+    function onToggleEntityStateCompleted(error, data) {
+        if (error != null) {
+            App.getApp().viewController.removeLoaderImmediate();
+            App.getApp().viewController.showError(error);
+            return;
         }
 
-        entity.setState(newState);
+        var changedStates = data[:body];
+        for (var i = 0; i < changedStates.size(); i++) {
+            var entityId = changedStates[i]["entity_id"];
+            if (_entityStates.hasKey(entityId)) {
+                _entityStates[entityId]["state"] = changedStates[i]["state"];
+                _entityStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
+            }
+        }
 
-        storeEntities();
-        Ui.requestUpdate();
-      }
+        App.getApp().viewController.removeLoader();
     }
 
-    App.getApp().viewController.removeLoader();
-  }
-
-  function toggleEntityState(entity) {
-    var entityId = entity.getId();
-    var currentState = entity.getState();
-    var entityType = null;
-    var action = null;
-    var loadingText = "Loading";
-
-    if (entity.getType() == Entity.TYPE_SCRIPT) {
-      action = Client.ENTITY_ACTION_TURN_ON;
-      loadingText = "Running";
-    } else if (entity.getType() == Entity.TYPE_LOCK) {
-      if (currentState == Entity.STATE_UNLOCKED) {
-        action = Client.ENTITY_ACTION_LOCK;
-        loadingText = "Locking";
-      } else if (currentState == Entity.STATE_LOCKED) {
-        action = Client.ENTITY_ACTION_UNLOCK;
-        loadingText = "Unlocking";
-      }
-    } else {
-      if (currentState == Entity.STATE_ON) {
-        action = Client.ENTITY_ACTION_TURN_OFF;
-        loadingText = "Turning off";
-      } else if (currentState == Entity.STATE_OFF) {
-        action = Client.ENTITY_ACTION_TURN_ON;
-        loadingText = "Turning on";
-      }
-    }
-
-    if (entity.getType() == Entity.TYPE_SCENE) {
-      entityType = "scene";
-      action = null;
-    } else if (entity.getType() == Entity.TYPE_LIGHT) {
-      entityType = "light";
-    } else if (entity.getType() == Entity.TYPE_SWITCH) {
-      entityType = "switch";
-    } else if (entity.getType() == Entity.TYPE_AUTOMATION) {
-      entityType = "automation";
-    } else if (entity.getType() == Entity.TYPE_SCRIPT) {
-      entityType = "script";
-    } else if (entity.getType() == Entity.TYPE_LOCK) {
-      entityType = "lock";
-    }
+    /*
+    * Executes action on entity, script or scene
+    * Entity is toggled
+    */
+    function toggleEntityState(id, type, currState) {
+        var action = null;
+        var loadingText = currState.equals(STATE_ON) ? Rez.Strings.LoaderTurningOff : Rez.Strings.LoaderTurningOn;
+    
+        switch(type) {
+            case ENTITY_TYPE_AUTOMATION:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_INPUT_BOOLEAN:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_LIGHT:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_LOCK:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                loadingText = currState.equals(STATE_LOCKED) ? Rez.Strings.LoaderUnlocking : Rez.Strings.LoaderLocking;
+                break;
+            case ENTITY_TYPE_SCENE:
+                loadingText = Rez.Strings.LoaderLoading;
+                break;
+            case ENTITY_TYPE_SCRIPT:
+                loadingText = Rez.Strings.LoaderRunning;
+                break;
+            case ENTITY_TYPE_SWITCH:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            default:
+                return false;
+        }
 
     App.getApp().viewController.showLoader(loadingText);
-
-    client.setEntityState(entityId, entityType, action, Utils.method(Hass, :onToggleEntityStateCompleted));
+    client.setEntityState(id, type, action, Utils.method(Hass, :onToggleEntityStateCompleted));
+    
+    return true;
   }
-}
-
-class HassController {
-
-
-
-  // function _refreshPendingEntities() {
-  //   var entity = null;
-
-  //   for (var i = 0; i < _entities.size(); i++) {
-  //     if (_entities[i].getState() == null) {
-  //       entity = _entities[i];
-  //       break;
-  //     }
-  //   }
-
-  //   if (entity != null) {
-  //     client.getEntity(entity.getId(), method(:onReceiveRefreshedEntity));
-  //   } else {
-  //     System.println(_entities);
-  //     storeEntities();
-  //     App.getApp().viewController.removeLoader();
-  //   }
-  // }
-
-  // function onReceiveEntities(err, data) {
-  //   if (err == null) {
-  //     var entities = data[:body]["attributes"]["entity_id"];
-
-  //     _entities = new [0];
-
-  //     for (var i = 0; i < entities.size(); i++) {
-  //       _entities.add(new Entity({
-  //         :id => entities[i],
-  //         :name => "",
-  //         :state => null
-  //       }));
-  //     }
-
-  //     _refreshPendingEntities();
-  //   } else {
-  //     App.getApp().viewController.showError(err);
-  //   }
-  // }
-
-  // function refreshAllEntityStates() {
-  //     for (var i = 0; i < _entities.size(); i++) {
-  //       _entities[i].setState(null);
-  //     }
-
-  //     _refreshPendingEntities();
-  // }
 }

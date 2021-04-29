@@ -1,29 +1,20 @@
 
 (:glance)
 module Hass {
-    const HASS_STATE_ON = "on";
-    const HASS_STATE_OFF = "off";
-    const HASS_STATE_LOCKED = "locked";
-    const HASS_STATE_UNLOCKED = "unlocked";
-    const HASS_STATE_UNKNOWN = "unknown";
-
-    enum {
-        TYPE_SCENE,
-        TYPE_LIGHT,
-        TYPE_SWITCH,
-        TYPE_SCRIPT,
-        TYPE_LOCK,
-        TYPE_AUTOMATION,
-        TYPE_UNKNOWN
-    }
-
-    enum {
-        STATE_ON,
-        STATE_OFF,
-        STATE_LOCKED,
-        STATE_UNLOCKED,
-        STATE_UNKNOWN
-    }
+    const ENTITY_TYPE_AUTOMATION = "automation";
+    const ENTITY_TYPE_BINARY_SENSOR = "binary_sensor";
+    const ENTITY_TYPE_INPUT_BOOLEAN = "input_boolean";
+    const ENTITY_TYPE_LIGHT= "light";
+    const ENTITY_TYPE_LOCK = "lock";
+    const ENTITY_TYPE_SCENE = "scene";
+    const ENTITY_TYPE_SCRIPT = "script";
+    const ENTITY_TYPE_SENSOR = "sensor";
+    const ENTITY_TYPE_SWITCH = "switch";
+    
+    const STATE_ON = "on";
+    const STATE_OFF = "off";
+    const STATE_LOCKED = "locked";
+    const STATE_UNLOCKED = "unlocked";
 
     enum {
         ERROR_TOKEN_REVOKED,

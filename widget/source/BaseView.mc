@@ -1,5 +1,5 @@
-using Toybox.WatchUi as Ui;
 using Toybox.Application as App;
+using Toybox.WatchUi as Ui;
 
 class BaseView extends Ui.View {
     hidden var _firstLoad;
@@ -14,7 +14,7 @@ class BaseView extends Ui.View {
 
     // Load your resources here
     function onLayout(dc) {
-        var scene = new WatchUi.Text({
+        var scene = new Ui.Text({
             :text => "HassControl",
             :color => Graphics.COLOR_WHITE,
             :font => Graphics.FONT_LARGE,

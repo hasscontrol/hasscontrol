@@ -43,7 +43,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             return true;
         }
         if (itemId == MenuController.MENU_REFRESH_ENTITIES) {
-            Hass.importEntities();
+            Hass.importGroupEntities();
             return true;
         }
 
