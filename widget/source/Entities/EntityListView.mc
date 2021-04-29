@@ -1,7 +1,6 @@
 using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
-using Toybox.Lang;
 using Hass;
 
 class EntityListController {
@@ -80,15 +79,21 @@ class EntityListController {
     }
 
     /**
-    *
+    * Calls toggle action or opens extended entity view
     */
     function executeCurrentEntity() {
-    //TODO ADD open extended view or just toggle
         if (getCount() == 0) {
             return false;
         }
-System.println(_mEntities[_mIndex]);
-        return Hass.toggleEntityState(_mEntities[_mIndex], getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
+
+        var curEntId = getCurrentEntityId();
+
+        switch(getCurrentEntityType()) {
+            case Hass.ENTITY_TYPE_LIGHT:
+                return Ui.pushView(new EntityTypeLightView(curEntId), new EntityTypeLightDelegate(curEntId), Ui.SLIDE_RIGHT);
+            default:
+                return Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
+        }
     }
 }
 
