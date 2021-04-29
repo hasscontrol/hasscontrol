@@ -228,7 +228,6 @@ module Hass {
 
         function onWebResponse(responseCode, body, context) {
             var error = null;
-
             if (responseCode < 200 || responseCode >= 300) {
                 error = new RequestError(responseCode);
 

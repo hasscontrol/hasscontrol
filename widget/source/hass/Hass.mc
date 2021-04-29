@@ -101,7 +101,7 @@ module Hass {
             _entityRefreshingSilent = false;
         }
     }
-  
+
     /**
     * Requests state of single entity from HASS
     */

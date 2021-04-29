@@ -83,7 +83,7 @@ module Utils {
 
     return scenes;
   }
-
+(:glance)
   function method(Scope, symbol) {
     return new Lang.Method(Scope, symbol);
   }

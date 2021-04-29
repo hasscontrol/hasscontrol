@@ -7,7 +7,7 @@ using Hass;
 module Hass {
     const AUTH_ENDPOINT = "/auth/authorize";
     const TOKEN_ENDPOINT = "/auth/token";
-
+(:glance)
     class Client extends Hass.OAuthClient {
         static enum {
             ENTITY_ACTION_TURN_ON,
