@@ -4,6 +4,7 @@ using Toybox.System;
 
 using Utils;
 
+(:glance)
 module Hass {
     const STORAGE_KEY = "hass_imported_entities";
     const supportedEntityTypes = [
@@ -42,7 +43,7 @@ module Hass {
     * Returns all attributes of a single entity
     */
     function getEntityState(entityId) {
-        return _entityStates.get(entityId);
+        return _entityStates.get(entityId);        
     }
   
     /**

@@ -11,6 +11,7 @@ class MenuController {
 
         MENU_SELECT_START_VIEW,
         MENU_REFRESH_ENTITIES,
+        MENU_SET_GLANCE_ENTITY,
         MENU_LOGOUT,
 
         MENU_SELECT_START_VIEW_ENTITIES,
@@ -78,6 +79,14 @@ class MenuController {
             MenuController.MENU_REFRESH_ENTITIES,
             {}
         ));
+        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+            menu.addItem(new Ui.MenuItem(
+                Ui.loadResource(Rez.Strings.MenuGlanceEntity),
+                Hass.getImportedEntities().size() > 0 ? App.getApp().glance_entity : Ui.loadResource(Rez.Strings.MenuNoEntities),
+                MenuController.MENU_SET_GLANCE_ENTITY,
+                {}
+            ));
+        }
         menu.addItem(new Ui.MenuItem(
             "Logout",
             "",
@@ -127,5 +136,23 @@ class MenuController {
         ));
 
         Ui.pushView(menu, _delegate, Ui.SLIDE_IMMEDIATE);
+    }
+    
+    function showSelectGlanceEntity(parentMenuItem) {
+        var glanceMenu = new Ui.Menu2({
+            :title => Ui.loadResource(Rez.Strings.MenuGlanceEntity)
+        });
+        
+        var impEnt = Hass.getImportedEntities();
+        for (var i = 0; i < impEnt.size(); i++) {
+            glanceMenu.addItem(new Ui.MenuItem(
+            impEnt[i],
+            impEnt[i].equals(App.getApp().glance_entity) ? Ui.loadResource(Rez.Strings.Selected) : null,
+            impEnt[i],
+            {}
+        ));
+        }
+        
+        Ui.pushView(glanceMenu, new SubmenuGlanceDelegate(parentMenuItem), Ui.SLIDE_IMMEDIATE);
     }
 }

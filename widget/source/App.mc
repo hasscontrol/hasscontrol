@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
+using Toybox.Lang;
 using Hass;
 
 
@@ -8,9 +9,11 @@ class HassControlApp extends App.AppBase {
   static const SCENES_VIEW = "scenes";
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
+  static const STORAGE_GLACE_ENTITY = "glance_entity";
 
   var viewController;
   var menu;
+  var glance_entity;
 
   function initialize() {
     AppBase.initialize();
@@ -21,7 +24,11 @@ class HassControlApp extends App.AppBase {
    * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
-   *
+   * - Create Model for storing settings, load on demand, store on onStop()
+   * - try to fix glance mode
+   * - glance mode refresh entity state every 10min
+   * - try to reduce memory by substituing entity state dictionary with symbols
+   * - fix loading scenes from conenct iq app
   */
 
   function launchInitialView() {
@@ -76,7 +83,7 @@ class HassControlApp extends App.AppBase {
         HassControlApp.SCENES_VIEW
       );
     } else {
-      throw new InvalidValueException();
+      throw new Lang.InvalidValueException();
     }
   }
 
@@ -84,14 +91,15 @@ class HassControlApp extends App.AppBase {
     return Hass.client.isLoggedIn();
   }
 
-  function onStart(state) {}
+  function onStart(state) {
+      glance_entity = App.Storage.getValue(STORAGE_GLACE_ENTITY);
+  }
 
   function onStop(state) {}
 
+(:glance)
   function getGlanceView() {
-    return [
-      new AppGlance()
-    ];
+    return [new AppGlance(glance_entity)];
   }
 
   // Return the initial view of your application here
@@ -132,7 +140,6 @@ class HassControlApp extends App.AppBase {
       view = new BaseView();
       delegate = new BaseDelegate();
     }
-
 
     return [
       view,

@@ -3,28 +3,31 @@ using Hass;
 
 (:glance)
 class AppGlance extends Ui.GlanceView {
-  var _mClient;
+    var _glanceEntity;
 
-  function initialize() {
-    GlanceView.initialize();
-  }
+    function initialize(glEn) {
+        GlanceView.initialize();
+        _glanceEntity = glEn;
+    }
 
-  function getLayout() {
-    setLayout([]);
-  }
+    function onShow() {
+        Hass.refreshSingleEntity(_glanceEntity);
+    }
 
-  function onUpdate(dc) {
-    GlanceView.onUpdate(dc);
+    function onUpdate(dc) {
+        var height = dc.getHeight();
+        var font = Graphics.FONT_MEDIUM;
+        var text = "HassControl";
+        var entityState = Hass.getEntityState(_glanceEntity);
+  
+        if (entityState != null && entityState.hasKey("state")) {
+            text = entityState["state"];
+        }
 
-    var height = dc.getHeight();
+        var textDimensions = dc.getTextDimensions(text, font);
+        var textHeight = textDimensions[1];
 
-    var font = Graphics.FONT_MEDIUM;
-    var text = "HassControl";
-
-    var textDimensions = dc.getTextDimensions(text, font);
-    var textHeight = textDimensions[1];
-
-    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    dc.drawText(5, (height / 2) - (textHeight / 2), font, text, Graphics.TEXT_JUSTIFY_LEFT);
-  }
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.drawText(5, (height / 2) - (textHeight / 2), font, text, Graphics.TEXT_JUSTIFY_LEFT);
+    }
 }

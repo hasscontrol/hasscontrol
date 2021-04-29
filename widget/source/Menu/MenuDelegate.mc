@@ -38,6 +38,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             App.getApp().menu.showSettingsMenu();
             return true;
         }
+        /* Submenu SETTINGS */
         if (itemId == MenuController.MENU_SELECT_START_VIEW) {
             App.getApp().menu.showSelectStartViewMenu();
             return true;
@@ -46,6 +47,13 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             Hass.importGroupEntities();
             return true;
         }
+        if (itemId == MenuController.MENU_SET_GLANCE_ENTITY) {
+            if (Hass.getImportedEntities().size() < 1) {
+                return false;
+            }
+            App.getApp().menu.showSelectGlanceEntity(item);
+            return true;
+        }       
 
         if (itemId == MenuController.MENU_SELECT_START_VIEW_ENTITIES) {
             App.getApp().setStartView(HassControlApp.ENTITIES_VIEW);
@@ -65,9 +73,9 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             App.getApp().menu.showSettingsMenu();
             return true;
         }
-
+        
         /*
-         * GLOBAL MENU OPTIONS
+        * GLOBAL MENU OPTIONS
         */
         if (itemId == MenuController.MENU_BACK) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
@@ -75,5 +83,23 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         }
 
         return false;
+    }
+}
+
+class SubmenuGlanceDelegate extends Ui.Menu2InputDelegate {
+    hidden var parentMenuItem;
+
+    function initialize(p) {
+        Menu2InputDelegate.initialize();
+        parentMenuItem = p;
+    }
+
+    function onSelect(item) {
+        var itemId = item.getId();
+        App.getApp().glance_entity = itemId;
+        App.Storage.setValue(HassControlApp.STORAGE_GLACE_ENTITY, itemId);
+        
+        parentMenuItem.setSubLabel(itemId);
+        Ui.popView(Ui.SLIDE_IMMEDIATE);
     }
 }
