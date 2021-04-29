@@ -5,8 +5,7 @@ using Toybox.System;
 using Utils;
 
 module Hass {
-    const STORAGE_KEY = "Hass/entities";
-    //TODO STORE IMPORTED ENTITIES IN STORAGE
+    const STORAGE_KEY = "hass_imported_entities";
     const supportedEntityTypes = [
         ENTITY_TYPE_AUTOMATION,
         ENTITY_TYPE_BINARY_SENSOR,
@@ -22,6 +21,7 @@ module Hass {
     var _importedEntities = [];
     var _entityStates = {};
     var _entityToRefreshCounter = 0;
+    var _entityRefreshingSilent = false;
 
     function initClient() {
         client = new Client();
@@ -58,6 +58,8 @@ module Hass {
     */
     function _onRecievedGeneralEntity(err, data) {
         if (err != null) {
+            if (_entityRefreshingSilent) {return;}
+        
             if (data != null && data[:context][:callback] != null) {
                 data[:context][:callback].invoke(err, null);
             } else {
@@ -93,8 +95,9 @@ module Hass {
             // we have to keep refreshing until we achieve end of list
             client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
         } else {
-            // all entities are refreshed, remove loader
+            // all entities are refreshed, remove loader and resets silent refresher
             App.getApp().viewController.removeLoader();
+            _entityRefreshingSilent = false;
         }
     }
   
@@ -108,9 +111,12 @@ module Hass {
     /**
     * Requests state of all imported entities from HASS
     */
-  	function refreshImportedEntities() {
+  	function refreshImportedEntities(silent) {
+  	    if(_importedEntities.size() < 1) {return;}
+  	    
   	    _entityToRefreshCounter = 0;
   	    _entityStates = {};
+  	    _entityRefreshingSilent = silent;
   	    client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
   	}
 
@@ -132,11 +138,29 @@ module Hass {
       	        _importedEntities.add(recvEntities[i]);
       	    }
       	}
+        
+        storeGroupEntities();
 
-        System.print("Imported entities from the group: ");
-        System.println(_importedEntities);
-
-        refreshImportedEntities();
+        refreshImportedEntities(false);
+    }
+    
+    /**
+    * Stores entities from synchronized group into storage
+    */
+    function storeGroupEntities() {
+        App.Storage.setValue(STORAGE_KEY, _importedEntities);
+    }
+    
+    /**
+    * Loads entities from previously synchronized group from storage
+    */
+    function loadGroupEntities() {
+        var grEnt = App.Storage.getValue(STORAGE_KEY);
+        if (grEnt instanceof Toybox.Lang.Array) {
+            _importedEntities = grEnt;
+        } else {
+            _importedEntities = [];
+        }
     }
 
     /*

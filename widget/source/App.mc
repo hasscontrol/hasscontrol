@@ -100,11 +100,11 @@ class HassControlApp extends App.AppBase {
     menu = new MenuController();
 
     Hass.initClient();
-//    Hass.loadStoredEntities();
+    Hass.loadGroupEntities();
 //    Hass.loadScenesFromSettings();
 
     if (isLoggedIn()) {
-//      Hass.refreshAllEntities(true);
+      Hass.refreshImportedEntities(true);
     }
 
     var deviceSettings = System.getDeviceSettings();

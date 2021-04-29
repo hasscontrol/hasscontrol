@@ -235,9 +235,9 @@ class EntityListView extends Ui.View {
         var vw = dc.getWidth();
         var cvh = vh / 2;
         var cvw = vw / 2;
-        var SmileySad = Ui.loadResource(Rez.Drawables.SmileySad);
+        var smileySad = Ui.loadResource(Rez.Drawables.SmileySad);
 
-        dc.drawBitmap(cvw - (SmileySad.getHeight() / 2), (vh * 0.3) - (SmileySad.getHeight() / 2), SmileySad);
+        dc.drawBitmap(cvw - (smileySad.getHeight() / 2), (vh * 0.3) - (smileySad.getHeight() / 2), smileySad);
 
         var font = Graphics.FONT_MEDIUM;
         var text = Ui.loadResource(Rez.Strings.NoEntities);
