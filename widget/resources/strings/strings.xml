@@ -24,4 +24,6 @@
 
     <string id="Error_Auth_NotReachable">Server not reachable</string>
     <string id="Error_Auth_Revoked">Login Revoked</string>
+    <string id="ErrUnknown">Unknown error</string>
+    <string id="ErrTitle">Failed</string>
 </strings>

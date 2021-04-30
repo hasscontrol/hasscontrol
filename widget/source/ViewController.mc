@@ -8,12 +8,12 @@ using Hass;
 * like error, loader, login
 */
 class ViewController {
-    hidden var _errorView;
+    hidden var _errorViewActive;
     hidden var _loginView;
     hidden var _loaderActive;
 
     function initialize() {
-        _errorView = new ErrorView();
+        _errorViewActive = false;
         _loginView = new LoginView();
         _loaderActive = null;
     }
@@ -110,7 +110,7 @@ class ViewController {
     * We need to work around that it doesnt have onHide and onShow
     */
     function isShowingLoader() {
-        return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
+        return _loaderActive != null && !_errorViewActive && !_loginView.isActive();
     }
 
     /**
@@ -150,45 +150,50 @@ class ViewController {
         _removeLoaderImmediate();
     }
 
-  function showError(error) {
-    _removeLoaderImmediate();
+    /**
+    * Shows error view
+    * @param error: error class object or simple string
+    */
+    function showError(error) {
+        _removeLoaderImmediate();
+        var message = Ui.loadResource(Rez.Strings.ErrUnknown);
 
-    var message = "Unknown Error";
+        if (error instanceof Error) {
+            message = error.toShortString();
+            
+            if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
+                message += "\ncode ";
+                message += error.responseCode;
 
-    if (error instanceof Error) {
-      message = error.toShortString();
+                if (error instanceof Hass.OAuthError) {
+                    message += "\nauth ";
+                }
+            }
 
-      if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
-        message += "\ncode ";
-        message += error.responseCode;
-
-        if (error instanceof Hass.OAuthError) {
-          message += "\nauth ";
+            if (error.context != null) {
+                message += "\n" + error.context;
+            }
+        } else if (error instanceof String) {
+            message = error;
         }
-      }
+        
+        System.println(error);
 
-      if (error.context != null) {
-        message += "\n" + error.context;
-      }
-    } else if (error instanceof String) {
-      message = error;
+        if (_errorViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+
+        Ui.pushView(new ErrorView(message), new ErrorDelegate(), Ui.SLIDE_IMMEDIATE);
+        _errorViewActive = true;
     }
 
-    if (_errorView.isActive()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+    /**
+    * Removes error view
+    */
+    function removeError() {
+        if (_errorViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _errorViewActive = false;
     }
-
-    _errorView.setMessage(message);
-
-    Ui.pushView(_errorView, new ErrorDelegate(), Ui.SLIDE_IMMEDIATE);
-
-    System.println(error);
-    Ui.requestUpdate();
-  }
-
-  function removeError() {
-    if (_errorView.isActive()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
-    }
-  }
 }

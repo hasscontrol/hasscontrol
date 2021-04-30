@@ -29,6 +29,9 @@ class HassControlApp extends App.AppBase {
    * - glance mode refresh entity state every 10min
    * - try to reduce memory by substituing entity state dictionary with symbols
    * - fix loading scenes from conenct iq app
+   * - create global module with "layout" text, icon drawing
+   * - add short vibrate when send entity control request to hass
+   * - try to run app without internet, is error showing?
   */
 
   function launchInitialView() {
