@@ -74,7 +74,11 @@ module Hass {
         function _setIsLoggingIn(isLoggingIn) {
             System.println("is logging in: " + isLoggingIn);
             _isLoggingIn = isLoggingIn;
-            App.getApp().viewController.showLoginView(_isLoggingIn);
+            if (isLoggingIn) {
+                App.getApp().viewController.showLoginView();
+            } else {
+                App.getApp().viewController.removeLoginView();
+            }
         }
 
         function isLoggedIn() {

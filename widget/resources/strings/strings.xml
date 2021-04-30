@@ -1,5 +1,6 @@
 <strings>
     <string id="AppName">HassControl</string>
+    <string id="LogOnPhone">Login in on\nyour phone</string>
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
     <!-- Loader Messages -->

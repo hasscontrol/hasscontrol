@@ -1,5 +1,0 @@
-<layouts>
-    <layout id="LoginLayout">
-        <label id="Message" x="center" y="90" justification="Gfx.TEXT_JUSTIFY_CENTER" color="FFFFFF" font="Gfx.FONT_TINY" text="Login in on\nyour phone"/>
-    </layout>
-</layouts>

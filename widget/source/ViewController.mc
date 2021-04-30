@@ -9,12 +9,12 @@ using Hass;
 */
 class ViewController {
     hidden var _errorViewActive;
-    hidden var _loginView;
+    hidden var _loginViewActive;
     hidden var _loaderActive;
 
     function initialize() {
         _errorViewActive = false;
-        _loginView = new LoginView();
+        _loginViewActive = false;
         _loaderActive = null;
     }
 
@@ -88,21 +88,23 @@ class ViewController {
     );
   }
 
-  function showLoginView(show) {
-    System.println("Show login? " + show);
-    if (!_loginView.isActive() && show == true) {
-      Ui.pushView(_loginView, new LoginDelegate(), Ui.SLIDE_IMMEDIATE);
-
-      Ui.requestUpdate();
+    /**
+    * Shows login on phone view
+    */
+    function showLoginView() {
+        Ui.pushView(new LoginView(), new LoginDelegate(method(:removeLoginView)), Ui.SLIDE_IMMEDIATE);
+        _loginViewActive = true;
     }
 
-    if (_loginView.isActive() && show == false) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
-
-      Ui.requestUpdate();
-    }
-
-  }
+    /**
+    * Removes login on phone view
+    */
+    function removeLoginView() {
+        if (_loginViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _loginViewActive = false;
+    } 
 
     /**
     * Returns state of loader
@@ -110,7 +112,7 @@ class ViewController {
     * We need to work around that it doesnt have onHide and onShow
     */
     function isShowingLoader() {
-        return _loaderActive != null && !_errorViewActive && !_loginView.isActive();
+        return _loaderActive != null && !_errorViewActive && !_loginViewActive;
     }
 
     /**
