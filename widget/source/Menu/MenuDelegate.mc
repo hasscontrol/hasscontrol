@@ -96,8 +96,7 @@ class SubmenuGlanceDelegate extends Ui.Menu2InputDelegate {
 
     function onSelect(item) {
         var itemId = item.getId();
-        App.getApp().glance_entity = itemId;
-        App.Storage.setValue(HassControlApp.STORAGE_GLACE_ENTITY, itemId);
+        App.getApp().glanceEntity = itemId;
         
         parentMenuItem.setSubLabel(itemId);
         Ui.popView(Ui.SLIDE_IMMEDIATE);

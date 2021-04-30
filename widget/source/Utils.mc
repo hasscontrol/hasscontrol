@@ -4,8 +4,8 @@ using Toybox.Lang;
 
 module Utils {
   function getScenesFromSettings() {
-    var scenes = new [0];
 
+    var scenes = new [0];
     var sceneString = App.Properties.getValue("scenes");
 
     if (sceneString != null && sceneString != "") {
@@ -82,9 +82,5 @@ module Utils {
     }
 
     return scenes;
-  }
-(:glance)
-  function method(Scope, symbol) {
-    return new Lang.Method(Scope, symbol);
   }
 }

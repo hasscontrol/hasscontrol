@@ -1,7 +1,7 @@
 using Toybox.Application as App;
-using Toybox.WatchUi as Ui;
+using Toybox.Lang;
 using Toybox.System;
-
+using Toybox.WatchUi as Ui;
 using Utils;
 
 (:glance)
@@ -94,7 +94,7 @@ module Hass {
         _entityToRefreshCounter++;
         if (_entityToRefreshCounter < _importedEntities.size()) {
             // we have to keep refreshing until we achieve end of list
-            client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
+            client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
         } else {
             // all entities are refreshed, remove loader and resets silent refresher
             App.getApp().viewController.removeLoader();
@@ -106,7 +106,7 @@ module Hass {
     * Requests state of single entity from HASS
     */
     function refreshSingleEntity(entityId) {
-        client.getEntity(entityId, null, Utils.method(Hass, :_onReceivedSingleEntity));
+        client.getEntity(entityId, null, new Lang.Method(Hass, :_onReceivedSingleEntity));
     }
   
     /**
@@ -118,7 +118,8 @@ module Hass {
   	    _entityToRefreshCounter = 0;
   	    _entityStates = {};
   	    _entityRefreshingSilent = silent;
-  	    client.getEntity(_importedEntities[_entityToRefreshCounter], null, Utils.method(Hass, :_onReceivedRefreshedImportedEntity));
+  	    //TODO HERE INSERT INTO _entityStates MANUALY DEFINED SCENES FROM CONNECTIQ
+  	    client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
   	}
 
 	/**
@@ -175,7 +176,7 @@ module Hass {
         }
 	
         App.getApp().viewController.showLoader(Rez.Strings.LoaderRefreshing);
-        client.getEntity(group, null, Utils.method(Hass, :_onReceivedGroupEntities));
+        client.getEntity(group, null, new Lang.Method(Hass, :_onReceivedGroupEntities));
     }
 
     /**
@@ -239,9 +240,17 @@ module Hass {
                 return false;
         }
 
-    App.getApp().viewController.showLoader(loadingText);
-    client.setEntityState(id, type, action, Utils.method(Hass, :onToggleEntityStateCompleted));
+        App.getApp().viewController.showLoader(loadingText);
+        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted));
     
-    return true;
-  }
+        return true;
+    }
+  
+  /**
+  * Read manualy defined scene entities in connect iq
+  */
+    function importScenesFromSettings() {
+        var sceneString = App.Properties.getValue("scenes");
+
+    }
 }

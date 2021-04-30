@@ -9,15 +9,13 @@ class HassControlApp extends App.AppBase {
   static const SCENES_VIEW = "scenes";
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
-  static const STORAGE_GLACE_ENTITY = "glance_entity";
+    var viewController;
+    var menu;
+    var glanceEntity = null;
 
-  var viewController;
-  var menu;
-  var glance_entity;
-
-  function initialize() {
-    AppBase.initialize();
-  }
+    function initialize() {
+        AppBase.initialize();
+    }
 
   /*
    * TODO:
@@ -89,41 +87,46 @@ class HassControlApp extends App.AppBase {
       throw new Lang.InvalidValueException();
     }
   }
+  
+    function isLoggedIn() {
+        return Hass.client.isLoggedIn();
+    }
 
-  function isLoggedIn() {
-    return Hass.client.isLoggedIn();
-  }
+    function onStart(state) {
+        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+            glanceEntity = App.Storage.getValue("glance_entity");
+        }
+        Hass.initClient();
+    }
 
-  function onStart(state) {
-      glance_entity = App.Storage.getValue(STORAGE_GLACE_ENTITY);
-  }
-
-  function onStop(state) {}
+    function onStop(state) {
+        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+            App.Storage.setValue("glance_entity", glanceEntity);
+        }
+    }
 
 (:glance)
-  function getGlanceView() {
-    return [new AppGlance(glance_entity)];
-  }
+    function getGlanceView() {
+        return [new AppGlance(glanceEntity)];
+    }
 
   // Return the initial view of your application here
   function getInitialView() {
     viewController = new ViewController();
     menu = new MenuController();
-
-    Hass.initClient();
-    Hass.loadGroupEntities();
-//    Hass.loadScenesFromSettings();
-
+    
+      Hass.loadGroupEntities();
+      Hass.importScenesFromSettings();
     if (isLoggedIn()) {
       Hass.refreshImportedEntities(true);
     }
 
-    var deviceSettings = System.getDeviceSettings();
     var view = null;
     var delegate = null;
 
-    if (deviceSettings has :isGlanceModeEnabled) {
-      if (deviceSettings.isGlanceModeEnabled) {
+    if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+      if (System.getDeviceSettings().isGlanceModeEnabled) {
+        //IS THIS EVEN CALLED??? IF GLANCEMODEENABLED THAT LOADS DIFFERENT VIEW
         var initialView = getStartView();
 
         if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
