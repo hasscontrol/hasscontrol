@@ -32,7 +32,14 @@ class EntityListController {
     * Loads imported entity ids from HASS 
     */
     function refreshEntities() {
-        _mEntities = Hass.getImportedEntities();
+        _mEntities = [];
+        var impEnt = Hass.getImportedEntities();
+
+        for (var t = 0; t < _mTypes.size(); t++) {
+            for (var i = 0; i < impEnt.size(); i++) {
+                if (_mTypes[t].equals(impEnt[i].substring(0, impEnt[i].find(".")))) {_mEntities.add(impEnt[i]);} 
+            }
+        }
 
         if (_mIndex >= getCount()) {
             _mIndex = 0;

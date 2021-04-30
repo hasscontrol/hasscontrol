@@ -18,35 +18,31 @@ class ViewController {
         _loaderActive = null;
     }
 
-  function getSceneView() {
-    var controller = new EntityListController(
-      [
-//      Hass.TYPE_SCENE
-      ]
-    );
+    function getSceneView() {
+        var controller = new EntityListController([Hass.ENTITY_TYPE_SCENE]);
 
-    return [
-      new EntityListView(controller),
-      new EntityListDelegate(controller)
-    ];
-  }
+        return [
+            new EntityListView(controller),
+            new EntityListDelegate(controller)
+        ];
+    }
 
-  function getEntityView() {
-    var controller = new EntityListController(
-      [
-//        Hass.TYPE_LIGHT,
-//        Hass.TYPE_SWITCH,
-//        Hass.TYPE_AUTOMATION,
-//        Hass.TYPE_SCRIPT,
-//        Hass.TYPE_LOCK
-      ]
-    );
+    function getEntityView() {
+        var controller = new EntityListController([
+            Hass.ENTITY_TYPE_AUTOMATION,
+            Hass.ENTITY_TYPE_BINARY_SENSOR,
+            Hass.ENTITY_TYPE_INPUT_BOOLEAN,
+            Hass.ENTITY_TYPE_LIGHT,
+            Hass.ENTITY_TYPE_LOCK,
+            Hass.ENTITY_TYPE_SCRIPT,
+            Hass.ENTITY_TYPE_SENSOR,
+            Hass.ENTITY_TYPE_SWITCH]);
 
-    return [
-      new EntityListView(controller),
-      new EntityListDelegate(controller)
-    ];
-  }
+        return [
+            new EntityListView(controller),
+            new EntityListDelegate(controller)
+        ];
+    }
 
   function pushSceneView() {
     var view = getSceneView();
