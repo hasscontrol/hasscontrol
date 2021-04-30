@@ -154,34 +154,34 @@ class EntityListView extends Ui.View {
         var vw = dc.getWidth();
         var cvw = vw / 2;
         var drawable = null;
-
+        
         switch(type) {
             case Hass.ENTITY_TYPE_AUTOMATION:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff);
                 break;
             case Hass.ENTITY_TYPE_BINARY_SENSOR:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
                 break;
             case Hass.ENTITY_TYPE_INPUT_BOOLEAN:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
                 break;
             case Hass.ENTITY_TYPE_LIGHT:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.LightOn : Rez.Drawables.LightOff);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.LightOn : Rez.Drawables.LightOff);
                 break;
             case Hass.ENTITY_TYPE_LOCK:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_LOCKED) ? Rez.Drawables.LockLocked : Rez.Drawables.LockUnlocked);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_LOCKED) ? Rez.Drawables.LockLocked : Rez.Drawables.LockUnlocked);
                 break;
             case Hass.ENTITY_TYPE_SCENE:
-                drawable = WatchUi.loadResource(Rez.Drawables.Scene);
+                drawable = Ui.loadResource(Rez.Drawables.Scene);
                 break;
             case Hass.ENTITY_TYPE_SCRIPT:
-                drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
+                drawable = Ui.loadResource(Rez.Drawables.ScriptOff);
                 break;
             case Hass.ENTITY_TYPE_SWITCH:
-                drawable = WatchUi.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.SwitchOn : Rez.Drawables.SwitchOff);
+                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.SwitchOn : Rez.Drawables.SwitchOff);
                 break;
             default:
-                drawable = WatchUi.loadResource(Rez.Drawables.Unknown);
+                drawable = Ui.loadResource(Rez.Drawables.Unknown);
         }
         
         dc.drawBitmap(cvw - (drawable.getHeight() / 2), (vh * 0.3) - (drawable.getHeight() / 2), drawable);

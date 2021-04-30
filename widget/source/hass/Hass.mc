@@ -126,7 +126,6 @@ module Hass {
 	*/
     function _onReceivedGroupEntities(err, data) {
         if (err) {
-            App.getApp().viewController.removeLoader();
             App.getApp().viewController.showError(err);
             return;
         }
@@ -184,7 +183,6 @@ module Hass {
     */
     function onToggleEntityStateCompleted(error, data) {
         if (error != null) {
-            App.getApp().viewController.removeLoaderImmediate();
             App.getApp().viewController.showError(error);
             return;
         }

@@ -1,41 +1,22 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using Toybox.Time;
-
 using Hass;
 
+/**
+* ViewController shows and hides overlay views
+* like error, loader, login
+*/
 class ViewController {
-  hidden var _currentView;
-  hidden var _loaderView;
-  hidden var _errorView;
-  hidden var _errorDelegate;
-  hidden var _loginView;
-  hidden var _loginDelegate;
-  hidden var _loaderActive;
-  hidden var _loaderTimer;
-  hidden var _sceneController;
+    hidden var _errorView;
+    hidden var _loginView;
+    hidden var _loaderActive;
 
-  function initialize() {
-    _loaderView = new ProgressView();
-    _errorView = new ErrorView();
-    _errorDelegate = new ErrorDelegate();
-    _loginView = new LoginView();
-    _loginDelegate = new LoginDelegate();
-    _loaderActive = null;
-    _loaderTimer = new Timer.Timer();
-  }
-
-
-  // TODO:
-  // Delay för att stänga loader
-  // vad händer om användaren stänger loader innan appen stänger loader?
-
-
-  // Since the progress bar is not a normal view,
-  // We need to work around that it doesnt have onHide and onShow
-  function isShowingLoader() {
-    return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
-  }
+    function initialize() {
+        _errorView = new ErrorView();
+        _loginView = new LoginView();
+        _loaderActive = null;
+    }
 
   function getSceneView() {
     var controller = new EntityListController(
@@ -110,7 +91,7 @@ class ViewController {
   function showLoginView(show) {
     System.println("Show login? " + show);
     if (!_loginView.isActive() && show == true) {
-      Ui.pushView(_loginView, _loginDelegate, Ui.SLIDE_IMMEDIATE);
+      Ui.pushView(_loginView, new LoginDelegate(), Ui.SLIDE_IMMEDIATE);
 
       Ui.requestUpdate();
     }
@@ -122,50 +103,55 @@ class ViewController {
     }
 
   }
- 
-  function showLoader(rezString) {
-    if (isShowingLoader()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+
+    /**
+    * Returns state of loader
+    * Since the progress bar is not a normal view,
+    * We need to work around that it doesnt have onHide and onShow
+    */
+    function isShowingLoader() {
+        return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
     }
 
-    try {
-        _loaderView.setDisplayString(Ui.loadResource(rezString));
-    } catch (e instanceof UnexpectedTypeException) {
-        _loaderView.setDisplayString(rezString);
+    /**
+    * Shows immediatelly a loader with custom msg
+    * @param rezString: identifier to string from xml
+    */ 
+    function showLoader(rezString) {
+        if (isShowingLoader()) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _loaderActive = Time.now();
+        Ui.pushView(new Ui.ProgressBar(Ui.loadResource(rezString), null), null, Ui.SLIDE_BLINK);
     }
 
-    Ui.pushView(_loaderView, null, Ui.SLIDE_BLINK);
-
-    _loaderActive = Time.now();
-
-    Ui.requestUpdate();
-  }
-
-
-  function removeLoader() {
-    if (isShowingLoader()) {
-      // if loader is about to close too soon, we need to delay it
-      if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
-        _loaderTimer.start(method(:removeLoader), 500, false);
-        return;
-      }
-
-      Ui.popView(Ui.SLIDE_BLINK);
+    /**
+    * Direct call to remove loader view
+    */
+    function _removeLoaderImmediate() {
+        if (isShowingLoader()) {
+            Ui.popView(Ui.SLIDE_BLINK);
+        }
+        _loaderActive = null;
     }
 
-    _loaderActive = null;
-  }
-
-  function removeLoaderImmediate() {
-    if (isShowingLoader()) {
-      Ui.popView(Ui.SLIDE_BLINK);
+    /**
+    * Calls remove loader only if some checks are passed
+    */
+    function removeLoader() {
+        if (isShowingLoader()) {
+            // if loader is about to close too soon, we need to delay it
+            if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
+                var loaderTimer = new Timer.Timer();
+                loaderTimer.start(method(:_removeLoaderImmediate), 500, false);
+                return;
+            }
+        }
+        _removeLoaderImmediate();
     }
-
-    _loaderActive = null;
-  }
 
   function showError(error) {
-    removeLoaderImmediate();
+    _removeLoaderImmediate();
 
     var message = "Unknown Error";
 
@@ -194,7 +180,7 @@ class ViewController {
 
     _errorView.setMessage(message);
 
-    Ui.pushView(_errorView, _errorDelegate, Ui.SLIDE_IMMEDIATE);
+    Ui.pushView(_errorView, new ErrorDelegate(), Ui.SLIDE_IMMEDIATE);
 
     System.println(error);
     Ui.requestUpdate();
