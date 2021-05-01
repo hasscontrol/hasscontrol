@@ -1,4 +1,5 @@
 using Toybox.Application as App;
+using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using Hass;
@@ -99,7 +100,9 @@ class EntityListController {
             case Hass.ENTITY_TYPE_LIGHT:
                 return Ui.pushView(new EntityTypeLightView(curEntId), new EntityTypeLightDelegate(curEntId), Ui.SLIDE_RIGHT);
             default:
-                return Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
+                var ret = Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
+                if (Attention has :vibrate && ret) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
+                return ret;
         }
     }
 }

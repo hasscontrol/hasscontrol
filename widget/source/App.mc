@@ -23,10 +23,8 @@ class HassControlApp extends App.AppBase {
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
    * - try to fix glance mode
-   * - glance mode refresh entity state every 10min
    * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
    * - create global module with "layout" text, icon drawing
-   * - add short vibrate when send entity control request to hass
    * - try to run app without internet, is error showing?
    * - test refreshing on real watch, showing no entities imported at first
    * - add scrollbar for not circle displays
