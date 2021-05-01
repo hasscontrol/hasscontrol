@@ -2,7 +2,6 @@ using Toybox.Application as App;
 using Toybox.Lang;
 using Toybox.System;
 using Toybox.WatchUi as Ui;
-using Utils;
 
 (:glance)
 module Hass {
@@ -20,6 +19,8 @@ module Hass {
     ];
     var client = null;
     var _importedEntities = [];
+    var _manuallyImportedScenes = [];
+    var _manuallyImportedScenesNames = [];
     var _entityStates = {};
     var _entityToRefreshCounter = 0;
     var _entityRefreshingSilent = false;
@@ -47,10 +48,11 @@ module Hass {
     }
   
     /**
-    * Returns list of imported entity ids
+    * Returns list of imported entity ids inclusive
+    * manualy defined scenes
     */
     function getImportedEntities() {
-        return _importedEntities;
+        return [].addAll(_importedEntities).addAll(_manuallyImportedScenes);
     }
     
     /**
@@ -99,6 +101,7 @@ module Hass {
             // all entities are refreshed, remove loader and resets silent refresher
             App.getApp().viewController.removeLoader();
             _entityRefreshingSilent = false;
+            Ui.requestUpdate();
         }
     }
 
@@ -111,6 +114,7 @@ module Hass {
   
     /**
     * Requests state of all imported entities from HASS
+    * if there are manualy defined scene, insert them as well
     */
   	function refreshImportedEntities(silent) {
   	    if(_importedEntities.size() < 1) {return;}
@@ -118,8 +122,9 @@ module Hass {
   	    _entityToRefreshCounter = 0;
   	    _entityStates = {};
   	    _entityRefreshingSilent = silent;
-  	    //TODO HERE INSERT INTO _entityStates MANUALY DEFINED SCENES FROM CONNECTIQ
-  	    client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
+  	    
+  	    insertManuallyImportedScenes(_entityStates);
+        client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
   	}
 
 	/**
@@ -245,12 +250,66 @@ module Hass {
     
         return true;
     }
+    
+      	
+  	/**
+  	* Inserts manually imported scenes into dictionary
+  	*/
+  	function insertManuallyImportedScenes(ent) {
+  	    for (var i = 0; i < _manuallyImportedScenes.size(); i++) {
+  	        ent.put(_manuallyImportedScenes[i],
+  	                {"attributes" => {"friendly_name" => (_manuallyImportedScenesNames[i] == null ? _manuallyImportedScenes[i] : _manuallyImportedScenesNames[i])},
+  	                 "state" => "scening"});
+  	    }
+  	}
   
-  /**
-  * Read manualy defined scene entities in connect iq
-  */
+    /**
+    * Read manualy defined scene entities through connect iq
+    */
     function importScenesFromSettings() {
         var sceneString = App.Properties.getValue("scenes");
+        if (sceneString == null || sceneString.equals("")) {return;}
+        
+        _manuallyImportedScenes = [];
+        _manuallyImportedScenesNames = [];
+        var run = true;
+        do {
+            var comPos = sceneString.find(",");
+            var extractedScene;
 
+            // extract one scene after another when sepparated by comma
+            if (comPos == null) {
+                extractedScene = sceneString;
+                run = false;
+            } else {
+                extractedScene = sceneString.substring(0, comPos);
+                sceneString = sceneString.substring(comPos+1, sceneString.length());
+            }
+             
+            // remove white space from begin of string if present   
+            var spacPos = extractedScene.find(" ");
+            while (spacPos != null) {
+                extractedScene = extractedScene.substring(spacPos+1, extractedScene.length());
+                spacPos = extractedScene.find(" ");
+            }
+
+            // extract manually defined name using equals sign if present
+            var eqPos = extractedScene.find("=");
+            var extractedSceneName = null;
+            if (eqPos != null) {
+                extractedSceneName = extractedScene.substring(eqPos+1, extractedScene.length());
+                extractedScene  = extractedScene.substring(0,eqPos);
+            }
+            _manuallyImportedScenesNames.add(extractedSceneName);
+            
+            // add prefix "scene." if not specified
+            if (extractedScene.find("scene.") == null) {
+                extractedScene = "scene." + extractedScene;
+            }
+
+            _manuallyImportedScenes.add(extractedScene);            
+        } while (run);
+        
+        insertManuallyImportedScenes(_entityStates);
     }
 }
