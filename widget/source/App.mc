@@ -30,7 +30,6 @@ class HassControlApp extends App.AppBase {
    * - try to run app without internet, is error showing?
    * - test refreshing on real watch, showing no entities imported at first
    * - add scrollbar for not circle displays
-   * - when checking if in array use indexof instead of for loop
   */
 
   function launchInitialView() {
@@ -46,12 +45,11 @@ class HassControlApp extends App.AppBase {
     return viewController.pushSceneView();
   }
 
-  function onSettingsChanged() {
-//    Hass.loadScenesFromSettings();
-    Hass.client.onSettingsChanged();
-
-    Ui.requestUpdate();
-  }
+    function onSettingsChanged() {
+        Hass.importScenesFromSettings();
+        Hass.client.onSettingsChanged();
+        Ui.requestUpdate();
+    }
 
   function logout() {
     Hass.client.logout();

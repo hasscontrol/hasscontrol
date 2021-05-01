@@ -270,6 +270,13 @@ module Hass {
         var sceneString = App.Properties.getValue("scenes");
         if (sceneString == null || sceneString.equals("")) {return;}
 
+		// remove old entities from states dict and entities array
+		var entitToRemoveFromDict = _entities.slice(_groupEntitiesCount, _entities.size());
+		for (var i=0; i < entitToRemoveFromDict.size(); i++) {
+    		_entitiesStates.remove(entitToRemoveFromDict[i]);
+        }
+        _entities = _entities.slice(0, _groupEntitiesCount);
+
         var run = true;
         do {
             var comPos = sceneString.find(",");
