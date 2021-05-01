@@ -30,6 +30,7 @@ class HassControlApp extends App.AppBase {
    * - try to run app without internet, is error showing?
    * - test refreshing on real watch, showing no entities imported at first
    * - add scrollbar for not circle displays
+   * - when checking if in array use indexof instead of for loop
   */
 
   function launchInitialView() {
@@ -102,6 +103,13 @@ class HassControlApp extends App.AppBase {
     function onStop(state) {
         if (System.getDeviceSettings() has :isGlanceModeEnabled) {
             App.Storage.setValue("glance_entity", glanceEntity);
+            if (!System.getDeviceSettings().isGlanceModeEnabled) {
+                // on devices with glance mode store only if glance mode off
+                Hass.storeGroupEntities();
+            }
+        } else {
+            // on devices without glance mode store everytime
+            Hass.storeGroupEntities();
         }
     }
 
@@ -110,46 +118,46 @@ class HassControlApp extends App.AppBase {
         return [new AppGlance(glanceEntity)];
     }
 
-  // Return the initial view of your application here
-  function getInitialView() {
-    viewController = new ViewController();
-    menu = new MenuController();
+    // Return the initial view of your application here
+    function getInitialView() {
+        viewController = new ViewController();
+        menu = new MenuController();
     
-      Hass.loadGroupEntities();
-      Hass.importScenesFromSettings();
-    if (isLoggedIn()) {
-      Hass.refreshImportedEntities(true);
-    }
-
-    var view = null;
-    var delegate = null;
-
-    if (System.getDeviceSettings() has :isGlanceModeEnabled) {
-      if (System.getDeviceSettings().isGlanceModeEnabled) {
-        //IS THIS EVEN CALLED??? IF GLANCEMODEENABLED THAT LOADS DIFFERENT VIEW
-        var initialView = getStartView();
-
-        if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-          var entityView = viewController.getEntityView();
-          view = entityView[0];
-          delegate = entityView[1];
+        Hass.loadGroupEntities();
+        Hass.importScenesFromSettings();
+        if (isLoggedIn()) {
+            Hass.refreshImportedEntities(true);
         }
-        if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-          var sceneView = viewController.getSceneView();
-          view = sceneView[0];
-          delegate = sceneView[1];
+
+        var view = null;
+        var delegate = null;
+
+        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+            if (System.getDeviceSettings().isGlanceModeEnabled) {
+                //IS THIS EVEN CALLED??? IF GLANCEMODEENABLED THAT LOADS DIFFERENT VIEW
+                var initialView = getStartView();
+
+                if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
+                    var entityView = viewController.getEntityView();
+                    view = entityView[0];
+                    delegate = entityView[1];
+                }
+                if (initialView.equals(HassControlApp.SCENES_VIEW)) {
+                    var sceneView = viewController.getSceneView();
+                    view = sceneView[0];
+                    delegate = sceneView[1];
+                }
+            }
         }
-      }
-    }
 
-    if (view == null || delegate == null) {
-      view = new BaseView();
-      delegate = new BaseDelegate();
-    }
+        if (view == null || delegate == null) {
+            view = new BaseView();
+            delegate = new BaseDelegate();
+        }
 
-    return [
-      view,
-      delegate
-    ];
-  }
+        return [
+            view,
+            delegate
+        ];
+    }
 }

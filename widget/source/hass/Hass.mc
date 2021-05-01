@@ -1,11 +1,11 @@
 using Toybox.Application as App;
-using Toybox.Lang;
-using Toybox.System;
+using Toybox.Lang as Lang;
 using Toybox.WatchUi as Ui;
 
 (:glance)
 module Hass {
-    const STORAGE_KEY = "hass_imported_entities";
+    const STORAGE_GROUP_ENTITIES = "hass_group_entities";
+    const STORAGE_STATES = "hass_entities_state";
     const supportedEntityTypes = [
         ENTITY_TYPE_AUTOMATION,
         ENTITY_TYPE_BINARY_SENSOR,
@@ -18,12 +18,11 @@ module Hass {
         ENTITY_TYPE_SWITCH
     ];
     var client = null;
-    var _importedEntities = [];
-    var _manuallyImportedScenes = [];
-    var _manuallyImportedScenesNames = [];
-    var _entityStates = {};
+    var _entities;
+    var _entitiesStates;
+    var _groupEntitiesCount;
     var _entityToRefreshCounter = 0;
-    var _entityRefreshingSilent = false;
+    var _entitiesRefreshingSilent = false;
 
     function initClient() {
         client = new Client();
@@ -44,7 +43,7 @@ module Hass {
     * Returns all attributes of a single entity
     */
     function getEntityState(entityId) {
-        return _entityStates.get(entityId);        
+        return _entitiesStates.get(entityId);        
     }
   
     /**
@@ -52,7 +51,7 @@ module Hass {
     * manualy defined scenes
     */
     function getImportedEntities() {
-        return [].addAll(_importedEntities).addAll(_manuallyImportedScenes);
+        return _entities;
     }
     
     /**
@@ -61,7 +60,7 @@ module Hass {
     */
     function _onRecievedGeneralEntity(err, data) {
         if (err != null) {
-            if (_entityRefreshingSilent) {return;}
+            if (_entitiesRefreshingSilent) {return;}
         
             if (data != null && data[:context][:callback] != null) {
                 data[:context][:callback].invoke(err, null);
@@ -74,7 +73,7 @@ module Hass {
         var entityDict = {"state" => data[:body]["state"],
                           "attributes" => data[:body]["attributes"],
                           "last_changed" => data[:body]["last_changed"]};        
-        _entityStates.put(data[:body]["entity_id"], entityDict);
+        _entitiesStates.put(data[:body]["entity_id"], entityDict);
     }
   
     /**
@@ -87,20 +86,20 @@ module Hass {
     /**
     * Callback when state of entity is returned form HASS.
     * This function is used only when refreshing all imported
-    * entities at once. We have to call one web request after
-    * another, otherwise the app will crash.
+    * group entities at once. Caution we have to call one
+    * web request after another, otherwise the app will crash.
     */
     function _onReceivedRefreshedImportedEntity(err, data) {
         _onRecievedGeneralEntity(err, data);
         
         _entityToRefreshCounter++;
-        if (_entityToRefreshCounter < _importedEntities.size()) {
+        if (_entityToRefreshCounter < _groupEntitiesCount) {
             // we have to keep refreshing until we achieve end of list
-            client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
+            client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
         } else {
             // all entities are refreshed, remove loader and resets silent refresher
             App.getApp().viewController.removeLoader();
-            _entityRefreshingSilent = false;
+            _entitiesRefreshingSilent = false;
             Ui.requestUpdate();
         }
     }
@@ -117,18 +116,15 @@ module Hass {
     * if there are manualy defined scene, insert them as well
     */
   	function refreshImportedEntities(silent) {
-  	    if(_importedEntities.size() < 1) {return;}
-  	    
-  	    _entityToRefreshCounter = 0;
-  	    _entityStates = {};
-  	    _entityRefreshingSilent = silent;
-  	    
-  	    insertManuallyImportedScenes(_entityStates);
-        client.getEntity(_importedEntities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
+  	    if(_entities.size() < 1) {return;}
+
+  	    _entitiesRefreshingSilent = silent;
+        client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
   	}
 
 	/**
 	* Callback called when HASS returns list with entities from the group
+	* Is removes all previously imported states
 	*/
     function _onReceivedGroupEntities(err, data) {
         if (err) {
@@ -136,16 +132,21 @@ module Hass {
             return;
         }
   
-        _importedEntities = new [0];
+        _entities = new [0];
+        _groupEntitiesCount = 0;
         var recvEntities = data[:body]["attributes"]["entity_id"];
         for (var i = 0; i < recvEntities.size(); i++) {
       	    var recvEntityType = recvEntities[i].substring(0, recvEntities[i].find("."));
       	    if (supportedEntityTypes.indexOf(recvEntityType) != -1) {
-      	        _importedEntities.add(recvEntities[i]);
+      	        _entities.add(recvEntities[i]);
+      	        _groupEntitiesCount++;
       	    }
       	}
-        
-        storeGroupEntities();
+
+        _entityToRefreshCounter = 0;
+  	    _entitiesStates = {};
+        //we have to import scenes again, because the dict was cleared
+        importScenesFromSettings();
 
         refreshImportedEntities(false);
     }
@@ -154,19 +155,30 @@ module Hass {
     * Stores entities from synchronized group into storage
     */
     function storeGroupEntities() {
-        App.Storage.setValue(STORAGE_KEY, _importedEntities);
+        var _entitWoManuScen = _entities.slice(0, _groupEntitiesCount);
+        var dictToStore = {};
+        for (var i = 0; i < _entitWoManuScen.size(); i++) {
+            dictToStore.put(_entitWoManuScen[i], _entitiesStates[_entitWoManuScen[i]]);
+        }
+        App.Storage.setValue(STORAGE_STATES, dictToStore);
+        App.Storage.setValue(STORAGE_GROUP_ENTITIES, _entitWoManuScen);
     }
     
     /**
     * Loads entities from previously synchronized group from storage
     */
     function loadGroupEntities() {
-        var grEnt = App.Storage.getValue(STORAGE_KEY);
-        if (grEnt instanceof Toybox.Lang.Array) {
-            _importedEntities = grEnt;
+        var grEnt = App.Storage.getValue(STORAGE_GROUP_ENTITIES);
+        var entStat = App.Storage.getValue(STORAGE_STATES);
+        if (grEnt instanceof Lang.Array) {
+            _entities = grEnt;
+            _groupEntitiesCount = grEnt.size();
         } else {
-            _importedEntities = [];
+            _entities = [];
+            _groupEntitiesCount = 0;
         }
+        
+        _entitiesStates = (entStat instanceof Lang.Dictionary) ? entStat : {};
     }
 
     /*
@@ -196,9 +208,9 @@ module Hass {
         var changedStates = data[:body];
         for (var i = 0; i < changedStates.size(); i++) {
             var entityId = changedStates[i]["entity_id"];
-            if (_entityStates.hasKey(entityId)) {
-                _entityStates[entityId]["state"] = changedStates[i]["state"];
-                _entityStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
+            if (_entitiesStates.hasKey(entityId)) {
+                _entitiesStates[entityId]["state"] = changedStates[i]["state"];
+                _entitiesStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
             }
         }
 
@@ -251,27 +263,13 @@ module Hass {
         return true;
     }
     
-      	
-  	/**
-  	* Inserts manually imported scenes into dictionary
-  	*/
-  	function insertManuallyImportedScenes(ent) {
-  	    for (var i = 0; i < _manuallyImportedScenes.size(); i++) {
-  	        ent.put(_manuallyImportedScenes[i],
-  	                {"attributes" => {"friendly_name" => (_manuallyImportedScenesNames[i] == null ? _manuallyImportedScenes[i] : _manuallyImportedScenesNames[i])},
-  	                 "state" => "scening"});
-  	    }
-  	}
-  
     /**
     * Read manualy defined scene entities through connect iq
     */
     function importScenesFromSettings() {
         var sceneString = App.Properties.getValue("scenes");
         if (sceneString == null || sceneString.equals("")) {return;}
-        
-        _manuallyImportedScenes = [];
-        _manuallyImportedScenesNames = [];
+
         var run = true;
         do {
             var comPos = sceneString.find(",");
@@ -300,16 +298,16 @@ module Hass {
                 extractedSceneName = extractedScene.substring(eqPos+1, extractedScene.length());
                 extractedScene  = extractedScene.substring(0,eqPos);
             }
-            _manuallyImportedScenesNames.add(extractedSceneName);
-            
+ 
             // add prefix "scene." if not specified
             if (extractedScene.find("scene.") == null) {
                 extractedScene = "scene." + extractedScene;
             }
 
-            _manuallyImportedScenes.add(extractedScene);            
+            _entities.add(extractedScene);
+            _entitiesStates.put(extractedScene,
+  	                          {"attributes" => {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName)},
+  	                           "state" => "scening"});         
         } while (run);
-        
-        insertManuallyImportedScenes(_entityStates);
     }
 }
