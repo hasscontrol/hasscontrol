@@ -5,31 +5,40 @@ using Hass;
 /**
 * Semi working example, less than proof of concept
 * Known bugs:
-* - sometimes occures Illegal Access (Out of Bounds),
-*   because too much memory is used
-* - Ui refreshing is currently done using timer,
-*   this has to be transformed into refreshSingleEntity callback
+* - sometimes occures Illegal Access (Out of Bounds) on onWebResponse(),
+*   because too much memory is used, code has to be cut down
+*   especially Client.mc and its parents. When this happend in simulator
+*   select File->Reset All App Data
+* - is unclear when System.getDeviceSettings().isGlanceModeEnabled
+*   is true. This is used to store entities states into storage
+*   when onStop called, but only if glance is NOT on. Simulator
+*   is working the opposite way 
 */
 
 (:glance)
 class AppGlance extends Ui.GlanceView {
     var _glanceEntity;
+    var _timer;
 
     function initialize(glEn) {
         GlanceView.initialize();
         _glanceEntity = glEn;
-        var _timer = new Timer.Timer();
-        _timer.start(method(:onTimerDone), 5000, false);
+    }
+
+    function onHide() {
+        if (_timer) {_timer.stop();}
     }
 
     function onShow() {
-        if (_glanceEntity != null) {
-            Hass.refreshSingleEntity(_glanceEntity);
+        if (_glanceEntity) {
+            _timer = new Timer.Timer();
+            _timer.start(method(:onTimerDone), 30000, true);
+            onTimerDone();
         }
     }
-    
+
     function onTimerDone() {
-        Ui.requestUpdate();
+        Hass.refreshSingleEntity(_glanceEntity);
     }
 
     function onUpdate(dc) {
@@ -37,11 +46,9 @@ class AppGlance extends Ui.GlanceView {
         var font = Graphics.FONT_MEDIUM;
         var text = "HassControl";
         
-        if (_glanceEntity != null) {
+        if (_glanceEntity) {
             var entityState = Hass.getEntityState(_glanceEntity);
-            if (entityState != null && entityState.hasKey("state")) {
-                text = entityState["state"];
-            }
+            if (entityState != null && entityState.hasKey("state")) {text = entityState["state"];}
         }
 
         var textHeight = dc.getTextDimensions(text, font)[1];

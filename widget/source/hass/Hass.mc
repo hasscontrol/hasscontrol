@@ -19,7 +19,7 @@ module Hass {
     ];
     var client = null;
     var _entities;
-    var _entitiesStates;
+    var _entitiesStates = {};
     var _groupEntitiesCount;
     var _entityToRefreshCounter = 0;
     var _entitiesRefreshingSilent = false;
@@ -81,6 +81,7 @@ module Hass {
     */
     function _onReceivedSingleEntity(err, data) {
         _onRecievedGeneralEntity(err, data);
+        Ui.requestUpdate();
     }
     
     /**

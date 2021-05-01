@@ -101,7 +101,8 @@ class HassControlApp extends App.AppBase {
     function onStop(state) {
         if (System.getDeviceSettings() has :isGlanceModeEnabled) {
             App.Storage.setValue("glance_entity", glanceEntity);
-            if (!System.getDeviceSettings().isGlanceModeEnabled) {
+            if (System.getDeviceSettings().isGlanceModeEnabled) {
+            //TODO IS UNCLEAR WHEN THIS IS TRUE
                 // on devices with glance mode store only if glance mode off
                 Hass.storeGroupEntities();
             }
