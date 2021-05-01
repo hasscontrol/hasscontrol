@@ -35,9 +35,9 @@ class EntityListController {
         _mEntities = [];
         var impEnt = Hass.getImportedEntities();
 
-        for (var t = 0; t < _mTypes.size(); t++) {
-            for (var i = 0; i < impEnt.size(); i++) {
-                if (_mTypes[t].equals(impEnt[i].substring(0, impEnt[i].find(".")))) {_mEntities.add(impEnt[i]);} 
+        for (var i = 0; i < impEnt.size(); i++) {
+            if (_mTypes.indexOf(impEnt[i].substring(0, impEnt[i].find("."))) != -1) {
+                _mEntities.add(impEnt[i]);
             }
         }
 
