@@ -227,14 +227,14 @@ class EntityListView extends Ui.View {
     * Draws entity state instead of icon
     */
     function drawEntityState(dc, text) {
-        _drawText(dc, text, 0.5, [Graphics.FONT_MEDIUM, Graphics.FONT_TINY, Graphics.FONT_XTINY]);
+        _drawText(dc, text, 0.5, [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_TINY]);
     }
 
     /**
     * Draws entity name
     */
     function drawEntityName(dc, text) {
-        _drawText(dc, text, 1.1, [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_TINY]);
+        _drawText(dc, text, 1.1, [Graphics.FONT_MEDIUM, Graphics.FONT_TINY, Graphics.FONT_XTINY]);
     }
 
     /**
@@ -259,30 +259,40 @@ class EntityListView extends Ui.View {
 
     /**
     * Draws scroll bar
+    * Supports round and square display
     */
     function drawScrollBar(dc) {
         var vh = dc.getHeight();
-        var vw = dc.getWidth();
-        var cvh = vh / 2;
-        var cvw = vw / 2;
-        
-        var radius = cvh - 10;
         var padding = 1;
-        var topDegreeStart = 130;
-        var bottomDegreeEnd = 230;
-        var numEntities = _mController.getCount();
-        var currentIndex = _mController.getIndex();
-        var barSize = ((bottomDegreeEnd - padding) - (topDegreeStart + padding)) / numEntities;
-        var barStart = (topDegreeStart + padding) + (barSize * currentIndex);
+        if (System.getDeviceSettings().screenShape == 3 /*SCREEN_SHAPE_RECTANGLE*/) {
+            var barSize = ((vh * 0.9 - padding) - (vh * 0.1 - padding)) / _mController.getCount();
+            var barStart = (vh * 0.1) + (barSize * _mController.getIndex());
+            
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            dc.setPenWidth(10);
+            dc.drawLine(10, vh * 0.1, 10, vh * 0.9);
 
-        var attr = Graphics.ARC_COUNTER_CLOCKWISE;
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.setPenWidth(10);
-        dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.setPenWidth(6);
+            dc.drawLine(10, barStart, 10, barStart + barSize);
+        } else { /* ROUND AND SEMIROUND */
+            var cvh = vh / 2;
+            var cvw = dc.getWidth() / 2;
+            var radius = cvh - 10;
+            var topDegreeStart = 130;
+            var bottomDegreeEnd = 230;
+            var barSize = ((bottomDegreeEnd - padding) - (topDegreeStart + padding)) / _mController.getCount();
+            var barStart = (topDegreeStart + padding) + (barSize * _mController.getIndex());
+            var attr = Graphics.ARC_COUNTER_CLOCKWISE;
 
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.setPenWidth(6);
-        dc.drawArc(cvw, cvh, radius, attr, barStart, barStart + barSize);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            dc.setPenWidth(10);
+            dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
+
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.setPenWidth(6);
+            dc.drawArc(cvw, cvh, radius, attr, barStart, barStart + barSize);
+        }
     }
 
     /**
