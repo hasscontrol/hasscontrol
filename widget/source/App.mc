@@ -27,18 +27,12 @@ class HassControlApp extends App.AppBase {
    * - periodically refresh entities
   */
 
-  function launchInitialView() {
-    var initialView = getStartView();
-
-    if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-      return viewController.pushEntityView();
+    /**
+    * Launches initial view
+    */
+    function launchInitialView() {
+        return viewController.pushMainView(getStartView());
     }
-    if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-      return viewController.pushSceneView();
-    }
-
-    return viewController.pushSceneView();
-  }
 
     function onSettingsChanged() {
         Hass.importScenesFromSettings();
@@ -54,17 +48,23 @@ class HassControlApp extends App.AppBase {
     Hass.client.login(callback);
   }
 
-  function getStartView() {
-    var startView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
+    /**
+    * Loads saved start view from storage
+    */
+    function getStartView() {
+        var storedStartView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
+        var startView = HassControlApp.SCENES_VIEW;
+        
+        if (storedStartView == null) {return startView;}
 
-    if (startView != null && startView.equals(HassControlApp.SCENES_VIEW)) {
-      return HassControlApp.SCENES_VIEW;
-    } else if (startView != null && startView.equals(HassControlApp.ENTITIES_VIEW)) {
-      return HassControlApp.ENTITIES_VIEW;
+        if (storedStartView.equals(HassControlApp.SCENES_VIEW)) {
+            startView = HassControlApp.SCENES_VIEW;
+        } else if (storedStartView.equals(HassControlApp.ENTITIES_VIEW)) {
+            startView = HassControlApp.ENTITIES_VIEW;
+        }
+        
+        return startView;
     }
-
-    return HassControlApp.SCENES_VIEW;
-  }
 
   function setStartView(newStartView) {
     if (newStartView.equals(HassControlApp.ENTITIES_VIEW)) {

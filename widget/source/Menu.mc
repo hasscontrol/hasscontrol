@@ -1,4 +1,5 @@
 using Toybox.Application as App;
+using Toybox.System as System;
 using Toybox.WatchUi as Ui;
 using Hass;
 
@@ -19,13 +20,13 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         if (itemId == ControlMenu.MENU_SWITCH_TO_ENTITIES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
 
-            App.getApp().viewController.switchEntityView();
+            App.getApp().viewController.switchMainView(HassControlApp.ENTITIES_VIEW);
             return true;
         }
         if (itemId == ControlMenu.MENU_SWITCH_TO_SCENES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
 
-            App.getApp().viewController.switchSceneView();
+            App.getApp().viewController.switchMainView(HassControlApp.SCENES_VIEW);
             return true;
         }
         if (itemId == ControlMenu.MENU_LOGOUT) {
@@ -45,7 +46,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         }
         /* Submenu SETTINGS */
         if (itemId == ControlMenu.MENU_SELECT_START_VIEW) {
-            ControlMenu.showSelectStartViewMenu();
+            ControlMenu.showSelectStartViewMenu(item);
             return true;
         }
         if (itemId == ControlMenu.MENU_REFRESH_ENTITIES) {
@@ -163,7 +164,7 @@ module ControlMenu {
             ));
         }
 
-        return Ui.pushView(menu, new MenuDelegate(), Ui.SLIDE_IMMEDIATE);
+        return Ui.pushView(menu, new MenuDelegate(null), Ui.SLIDE_IMMEDIATE);
         }
 
     /**
@@ -201,13 +202,13 @@ module ControlMenu {
             null
         ));
 
-        Ui.pushView(menu, new MenuDelegate(), Ui.SLIDE_IMMEDIATE);
+        Ui.pushView(menu, new MenuDelegate(null), Ui.SLIDE_IMMEDIATE);
     }
 
     /**
     * Shows subsubmenu settings -> select start view
     */
-    function showSelectStartViewMenu() {
+    function showSelectStartViewMenu(parentMenuItem) {
         var menu = new Ui.Menu2({
             :title => Ui.loadResource(Rez.Strings.StartView)
         });
@@ -216,12 +217,12 @@ module ControlMenu {
         var entitiesSubtitle = null;
         var scenesSubtitle = null;
 
-        if (currentStartView == HassControlApp.ENTITIES_VIEW) {
-            entitiesSubtitle = Ui.loadResource(Rez.Strings.Selected);
-        }
-
         if (currentStartView == HassControlApp.SCENES_VIEW) {
             scenesSubtitle = Ui.loadResource(Rez.Strings.Selected);
+        }
+
+        if (currentStartView == HassControlApp.ENTITIES_VIEW) {
+            entitiesSubtitle = Ui.loadResource(Rez.Strings.Selected);
         }
 
         menu.addItem(new Ui.MenuItem(
@@ -245,7 +246,7 @@ module ControlMenu {
             null
         ));
 
-        Ui.pushView(menu, new MenuDelegate(), Ui.SLIDE_IMMEDIATE);
+        Ui.pushView(menu, new MenuDelegate(parentMenuItem), Ui.SLIDE_IMMEDIATE);
     }
     
     /**

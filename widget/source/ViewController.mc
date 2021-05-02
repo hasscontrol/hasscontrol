@@ -43,46 +43,30 @@ class ViewController {
             new EntityListDelegate(controller)
         ];
     }
-
-  function pushSceneView() {
-    var view = getSceneView();
-
-    Ui.pushView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function switchSceneView() {
-    var view = getSceneView();
-
-    Ui.switchToView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function pushEntityView() {
-    var view = getEntityView();
-
-    Ui.pushView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function switchEntityView() {
-    var view = getEntityView();
-
-    Ui.switchToView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
+    
+    /**
+    * Switches to wanted main view
+    */
+    function switchMainView(viewId) {
+        var view = getSceneView();
+        if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
+            view = getEntityView();
+        }
+        
+        Ui.switchToView(view[0], view[1], Ui.SLIDE_IMMEDIATE);
+    }
+    
+    /**
+    * Shows wanted main view
+    */
+    function pushMainView(viewId) {
+        var view = getSceneView();
+        if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
+            view = getEntityView();
+        }
+        
+        Ui.pushView(view[0], view[1], Ui.SLIDE_IMMEDIATE);
+    }
 
     /**
     * Shows login on phone view
