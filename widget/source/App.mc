@@ -27,7 +27,6 @@ class HassControlApp extends App.AppBase {
    * - create global module with "layout" text, icon drawing
    * - try to run app without internet, is error showing?
    * - test refreshing on real watch, showing no entities imported at first
-   * - add scrollbar for not circle displays
   */
 
   function launchInitialView() {
