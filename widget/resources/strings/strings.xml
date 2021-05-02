@@ -15,6 +15,14 @@
     <string id="MenuGlanceEntity">Glance entity</string>
     <string id="MenuNoEntities">-no entity-</string>
     <string id="Selected">selected</string>
+    <string id="Scenes">Scenes</string>
+    <string id="Entities">Entities</string>
+    <string id="Settings">Settings</string>
+    <string id="Login">Login</string>
+    <string id="Logout">Logout</string>
+    <string id="StartView">Start View</string>
+    <string id="RefreshEntities">Refresh entities</string>
+    <string id="Back">Back</string>
     <!-- ERROR -->
     <string id="Error_Unknown">Unknown error</string>
     <string id="Error_PhoneNotConnected">Phone not connected</string>

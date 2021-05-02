@@ -10,7 +10,6 @@ class HassControlApp extends App.AppBase {
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
     var viewController;
-    var menu;
     var glanceEntity = null;
 
     function initialize() {
@@ -24,9 +23,8 @@ class HassControlApp extends App.AppBase {
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
    * - try to fix glance mode
    * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
-   * - create global module with "layout" text, icon drawing
    * - try to run app without internet, is error showing?
-   * - test refreshing on real watch, showing no entities imported at first
+   * - periodically refresh entities
   */
 
   function launchInitialView() {
@@ -117,7 +115,6 @@ class HassControlApp extends App.AppBase {
     // Return the initial view of your application here
     function getInitialView() {
         viewController = new ViewController();
-        menu = new MenuController();
     
         Hass.loadGroupEntities();
         Hass.importScenesFromSettings();

@@ -2,6 +2,7 @@ using Toybox.Application as App;
 using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
+using ControlMenu;
 using Hass;
 
 class EntityListController {
@@ -116,7 +117,7 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
     }
 
     function onMenu() {
-        return App.getApp().menu.showRootMenu();
+        return ControlMenu.showRootMenu();
     }
 
     function onSelect() {
