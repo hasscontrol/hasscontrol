@@ -25,6 +25,7 @@ class HassControlApp extends App.AppBase {
    * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
    * - try to run app without internet, is error showing?
    * - periodically refresh entities
+   * - add action to entity type light (brightness)
   */
 
     /**

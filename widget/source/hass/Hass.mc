@@ -117,7 +117,7 @@ module Hass {
     * if there are manualy defined scene, insert them as well
     */
   	function refreshImportedEntities(silent) {
-  	    if(_entities.size() < 1) {return;}
+  	    if(_groupEntitiesCount < 1) {return;}
 
   	    _entitiesRefreshingSilent = silent;
         client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));

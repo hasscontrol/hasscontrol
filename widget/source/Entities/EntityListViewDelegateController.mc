@@ -3,6 +3,7 @@ using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using ControlMenu;
+using EntityLayout as Lay;
 using Hass;
 
 class EntityListController {
@@ -99,7 +100,8 @@ class EntityListController {
 
         switch(getCurrentEntityType()) {
             case Hass.ENTITY_TYPE_LIGHT:
-                return Ui.pushView(new EntityTypeLightView(curEntId), new EntityTypeLightDelegate(curEntId), Ui.SLIDE_RIGHT);
+                var deleg = new EntityTypeLightDelegate(curEntId);
+                return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_RIGHT);
             default:
                 var ret = Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
                 if (Attention has :vibrate && ret) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
@@ -168,163 +170,34 @@ class EntityListView extends Ui.View {
         
         switch(type) {
             case Hass.ENTITY_TYPE_AUTOMATION:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff);
+                drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff;
                 break;
             case Hass.ENTITY_TYPE_BINARY_SENSOR:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff;
                 break;
             case Hass.ENTITY_TYPE_INPUT_BOOLEAN:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff);
+                drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.CheckboxOn : Rez.Drawables.CheckboxOff;
                 break;
             case Hass.ENTITY_TYPE_LIGHT:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.LightOn : Rez.Drawables.LightOff);
+                drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.LightOn : Rez.Drawables.LightOff;
                 break;
             case Hass.ENTITY_TYPE_LOCK:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_LOCKED) ? Rez.Drawables.LockLocked : Rez.Drawables.LockUnlocked);
+                drawable = state.equals(Hass.STATE_LOCKED) ? Rez.Drawables.LockLocked : Rez.Drawables.LockUnlocked;
                 break;
             case Hass.ENTITY_TYPE_SCENE:
-                drawable = Ui.loadResource(Rez.Drawables.Scene);
+                drawable = Rez.Drawables.Scene;
                 break;
             case Hass.ENTITY_TYPE_SCRIPT:
-                drawable = Ui.loadResource(Rez.Drawables.ScriptOff);
+                drawable = Rez.Drawables.ScriptOff;
                 break;
             case Hass.ENTITY_TYPE_SWITCH:
-                drawable = Ui.loadResource(state.equals(Hass.STATE_ON) ? Rez.Drawables.SwitchOn : Rez.Drawables.SwitchOff);
+                drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.SwitchOn : Rez.Drawables.SwitchOff;
                 break;
             default:
-                drawable = Ui.loadResource(Rez.Drawables.Unknown);
-        }
-        
-        dc.drawBitmap(cvw - (drawable.getHeight() / 2), (vh * 0.3) - (drawable.getHeight() / 2), drawable);
-    }
-
-    /**
-    * Common draw text function
-    */
-    function _drawText(dc, text, hP, fonts) {
-        var vh = dc.getHeight();
-        var vw = dc.getWidth();
-        var cvh = vh / 2;
-        var cvw = vw / 2;
-        var fontHeight = vh * 0.3;
-        var fontWidth = vw * 0.80;
-        var font = fonts[0];
-
-        for (var i = 0; i < fonts.size(); i++) {
-            var truncate = i == fonts.size() - 1;
-            var tempText = Graphics.fitTextToArea(text, fonts[i], fontWidth, fontHeight, truncate);
-
-            if (tempText != null) {
-                text = tempText;
-                font = fonts[i];
-                break;
-            }
+                drawable = Rez.Drawables.Unknown;
         }
 
-        dc.drawText(cvw, cvh * hP, font, text, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-    
-    /**
-    * Draws entity state instead of icon
-    */
-    function drawEntityState(dc, text) {
-        _drawText(dc, text, 0.5, [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_TINY]);
-    }
-
-    /**
-    * Draws entity name
-    */
-    function drawEntityName(dc, text) {
-        _drawText(dc, text, 1.1, [Graphics.FONT_MEDIUM, Graphics.FONT_TINY, Graphics.FONT_XTINY]);
-    }
-
-    /**
-    * Draws no entity icon and text
-    */
-    function drawNoEntityIconText(dc) {
-        var vh = dc.getHeight();
-        var vw = dc.getWidth();
-        var cvh = vh / 2;
-        var cvw = vw / 2;
-        var smileySad = Ui.loadResource(Rez.Drawables.SmileySad);
-
-        dc.drawBitmap(cvw - (smileySad.getHeight() / 2), (vh * 0.3) - (smileySad.getHeight() / 2), smileySad);
-
-        var font = Graphics.FONT_MEDIUM;
-        var text = Ui.loadResource(Rez.Strings.NoEntities);
-        text = Graphics.fitTextToArea(text, font, vw * 0.9, vh * 0.9, true);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.drawText(cvw, cvh, font, text, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    /**
-    * Draws scroll bar
-    * Supports round and square display
-    */
-    function drawScrollBar(dc) {
-        var vh = dc.getHeight();
-        var padding = 1;
-        if (System.getDeviceSettings().screenShape == 3 /*SCREEN_SHAPE_RECTANGLE*/) {
-            var barSize = ((vh * 0.9 - padding) - (vh * 0.1 - padding)) / _mController.getCount();
-            var barStart = (vh * 0.1) + (barSize * _mController.getIndex());
-            
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-            dc.setPenWidth(10);
-            dc.drawLine(10, vh * 0.1, 10, vh * 0.9);
-
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.setPenWidth(6);
-            dc.drawLine(10, barStart, 10, barStart + barSize);
-        } else { /* ROUND AND SEMIROUND */
-            var cvh = vh / 2;
-            var cvw = dc.getWidth() / 2;
-            var radius = cvh - 10;
-            var topDegreeStart = 130;
-            var bottomDegreeEnd = 230;
-            var barSize = ((bottomDegreeEnd - padding) - (topDegreeStart + padding)) / _mController.getCount();
-            var barStart = (topDegreeStart + padding) + (barSize * _mController.getIndex());
-            var attr = Graphics.ARC_COUNTER_CLOCKWISE;
-
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-            dc.setPenWidth(10);
-            dc.drawArc(cvw, cvh, radius, attr, topDegreeStart, bottomDegreeEnd);
-
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.setPenWidth(6);
-            dc.drawArc(cvw, cvh, radius, attr, barStart, barStart + barSize);
-        }
-    }
-
-    /**
-    * Hides scroll bar when timer expires
-    */
-    function onTimerDone() {
-        _mTimerScrollBarActive = false;
-        _mShowScrollBar = false;
-        Ui.requestUpdate();
-    }
-
-    /**
-    * Checks if scroll bar should be showed and draws it
-    */
-    function drawScrollBarIfNeeded(dc) {
-        var index = _mController.getIndex();
-
-        if (_mTimerScrollBarActive && _mShowScrollBar == true) {
-            return;
-        }
-
-        if (_mLastIndex != index) {
-            if (_mTimerScrollBarActive) {
-                _mTimerScrollBar.stop();
-            }
-            _mShowScrollBar = true;
-            drawScrollBar(dc);
-            _mTimerScrollBar.start(method(:onTimerDone), 1000, false);
-        }
-
-        _mLastIndex = index;
+        Lay.drawIcon(dc, drawable);
     }
 
     function onUpdate(dc) {    
@@ -335,16 +208,17 @@ class EntityListView extends Ui.View {
         var entityType = _mController.getCurrentEntityType();
         
         if (entity == null) {
-            drawNoEntityIconText(dc);
+            Lay.drawIcon(dc, Rez.Drawables.SmileySad);
+            Lay.drawName(dc, Ui.loadResource(Rez.Strings.NoEntities));
             return;
         }
     
         if (entityType.equals("sensor")) {
-            drawEntityState(dc, entity["state"] + " " + entity["attributes"]["unit_of_measurement"]);
+            Lay.drawState(dc, entity["state"] + " " + entity["attributes"]["unit_of_measurement"]);
         } else {
             drawEntityIcon(dc, entity["state"], entityType);
         }
-        drawEntityName(dc, entity["attributes"]["friendly_name"]);
-        drawScrollBarIfNeeded(dc);
+        Lay.drawName(dc, entity["attributes"]["friendly_name"]);
+        Lay.drawScrollBarIfNeeded(dc, _mController.getCount(), _mController.getIndex());
     }
 }
