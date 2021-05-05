@@ -13,7 +13,6 @@
     <string id="LoaderTurningOn">Turning on</string>
     <!-- Menu -->
     <string id="MenuGlanceEntity">Glance entity</string>
-    <string id="MenuNoEntities">-no entity-</string>
     <string id="Selected">selected</string>
     <string id="Scenes">Scenes</string>
     <string id="Entities">Entities</string>

@@ -193,7 +193,7 @@ module ControlMenu {
         if (System.getDeviceSettings() has :isGlanceModeEnabled) {
             menu.addItem(new Ui.MenuItem(
                 Ui.loadResource(Rez.Strings.MenuGlanceEntity),
-                Hass.getImportedEntities().size() > 0 ? (App.getApp().glanceEntity == null ? Ui.loadResource(Rez.Strings.MenuNoEntities) : App.getApp().glanceEntity) : Ui.loadResource(Rez.Strings.MenuNoEntities),
+                Hass.getImportedEntities().size() > 0 ? (App.getApp().glanceEntity == null ? "entity." : App.getApp().glanceEntity) : null,
                 ControlMenu.MENU_SET_GLANCE_ENTITY,
                 null
             ));
