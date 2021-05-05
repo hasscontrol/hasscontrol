@@ -45,29 +45,17 @@ class ViewController {
     }
     
     /**
-    * Switches to wanted main view
+    * Returns view and delegate of main view
     */
-    function switchMainView(viewId) {
+    function getMainViewDelegate(viewId) {
         var view = getSceneView();
         if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
             view = getEntityView();
         }
         
-        Ui.switchToView(view[0], view[1], Ui.SLIDE_IMMEDIATE);
+        return view;
     }
     
-    /**
-    * Shows wanted main view
-    */
-    function pushMainView(viewId) {
-        var view = getSceneView();
-        if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
-            view = getEntityView();
-        }
-        
-        Ui.pushView(view[0], view[1], Ui.SLIDE_IMMEDIATE);
-    }
-
     /**
     * Shows login on phone view
     */

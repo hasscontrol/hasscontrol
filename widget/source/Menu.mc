@@ -20,13 +20,15 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         if (itemId == ControlMenu.MENU_SWITCH_TO_ENTITIES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
 
-            App.getApp().viewController.switchMainView(HassControlApp.ENTITIES_VIEW);
+            var viewDeleg = App.getApp().viewController.getMainViewDelegate(HassControlApp.ENTITIES_VIEW);
+            Ui.switchToView(viewDeleg[0], viewDeleg[1], Ui.SLIDE_IMMEDIATE);
             return true;
         }
         if (itemId == ControlMenu.MENU_SWITCH_TO_SCENES) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
 
-            App.getApp().viewController.switchMainView(HassControlApp.SCENES_VIEW);
+            var viewDeleg = App.getApp().viewController.getMainViewDelegate(HassControlApp.SCENES_VIEW);
+            Ui.switchToView(viewDeleg[0], viewDeleg[1], Ui.SLIDE_IMMEDIATE);
             return true;
         }
         if (itemId == ControlMenu.MENU_LOGOUT) {
@@ -59,23 +61,23 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
             }
             ControlMenu.showSelectGlanceEntity(item);
             return true;
-        }       
+        }
 
         if (itemId == ControlMenu.MENU_SELECT_START_VIEW_ENTITIES) {
-            App.getApp().setStartView(HassControlApp.ENTITIES_VIEW);
+            App.Storage.setValue(HassControlApp.STORAGE_KEY_START_VIEW, HassControlApp.ENTITIES_VIEW);
 
             parentMenuItem.setSubLabel(HassControlApp.ENTITIES_VIEW);
             Ui.popView(Ui.SLIDE_IMMEDIATE);
             return true;
         }
         if (itemId == ControlMenu.MENU_SELECT_START_VIEW_SCENES) {
-            App.getApp().setStartView(HassControlApp.SCENES_VIEW);
+            App.Storage.setValue(HassControlApp.STORAGE_KEY_START_VIEW, HassControlApp.SCENES_VIEW);
 
             parentMenuItem.setSubLabel(HassControlApp.SCENES_VIEW);
             Ui.popView(Ui.SLIDE_IMMEDIATE);
             return true;
         }
-        
+
         /*
         * GLOBAL MENU OPTIONS
         */
@@ -103,7 +105,8 @@ class SubmenuGlanceDelegate extends Ui.Menu2InputDelegate {
     function onSelect(item) {
         var itemId = item.getId();
         App.getApp().glanceEntity = itemId;
-        
+        App.Storage.setValue("glance_entity", itemId);
+
         parentMenuItem.setSubLabel(itemId);
         Ui.popView(Ui.SLIDE_IMMEDIATE);
         return true;
@@ -111,7 +114,7 @@ class SubmenuGlanceDelegate extends Ui.Menu2InputDelegate {
 }
 
 /**
-* Control Menu module 
+* Control Menu module
 */
 module ControlMenu {
     enum {
@@ -248,7 +251,7 @@ module ControlMenu {
 
         Ui.pushView(menu, new MenuDelegate(parentMenuItem), Ui.SLIDE_IMMEDIATE);
     }
-    
+
     /**
     * Shows subsubmenu settings -> select glance entity
     */
@@ -256,7 +259,7 @@ module ControlMenu {
         var glanceMenu = new Ui.Menu2({
             :title => Ui.loadResource(Rez.Strings.MenuGlanceEntity)
         });
-        
+
         var impEnt = Hass.getImportedEntities();
         for (var i = 0; i < impEnt.size(); i++) {
             glanceMenu.addItem(new Ui.MenuItem(
@@ -266,7 +269,7 @@ module ControlMenu {
             null
         ));
         }
-        
+
         Ui.pushView(glanceMenu, new SubmenuGlanceDelegate(parentMenuItem), Ui.SLIDE_IMMEDIATE);
     }
 }

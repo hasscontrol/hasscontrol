@@ -3,7 +3,9 @@ using Toybox.WatchUi as Ui;
 
 /**
 * BaseViewDelegate
-* This is show after widget is started, not loaded
+* This is the first showed view after the widget is started.
+* Because its not possible to scroll up or down on this view,
+* we have to use it as transition to the real view.
 */
 class BaseDelegate extends Ui.BehaviorDelegate {
     function initialize() {
@@ -12,7 +14,6 @@ class BaseDelegate extends Ui.BehaviorDelegate {
 
     function onSelect() {
         App.getApp().launchInitialView();
-        return true;
     }
 }
 

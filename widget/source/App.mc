@@ -10,7 +10,7 @@ class HassControlApp extends App.AppBase {
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
     var viewController;
-    var glanceEntity = null;
+    var glanceEntity;
 
     function initialize() {
         AppBase.initialize();
@@ -29,10 +29,12 @@ class HassControlApp extends App.AppBase {
   */
 
     /**
-    * Launches initial view
+    * Launches initial, entity list, view
     */
     function launchInitialView() {
-        return viewController.pushMainView(getStartView());
+        var viewDelegate = self.viewController.getMainViewDelegate(getStartView());
+        Ui.pushView(viewDelegate[0], viewDelegate[1], Ui.SLIDE_IMMEDIATE);
+        return true;
     }
 
     function onSettingsChanged() {
@@ -50,39 +52,21 @@ class HassControlApp extends App.AppBase {
   }
 
     /**
-    * Loads saved start view from storage
+    * Loads stored start view from storage
     */
     function getStartView() {
         var storedStartView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
         var startView = HassControlApp.SCENES_VIEW;
-        
+
         if (storedStartView == null) {return startView;}
 
-        if (storedStartView.equals(HassControlApp.SCENES_VIEW)) {
-            startView = HassControlApp.SCENES_VIEW;
-        } else if (storedStartView.equals(HassControlApp.ENTITIES_VIEW)) {
+        if (storedStartView.equals(HassControlApp.ENTITIES_VIEW)) {
             startView = HassControlApp.ENTITIES_VIEW;
         }
-        
+
         return startView;
     }
 
-  function setStartView(newStartView) {
-    if (newStartView.equals(HassControlApp.ENTITIES_VIEW)) {
-      App.Storage.setValue(
-        HassControlApp.STORAGE_KEY_START_VIEW,
-        HassControlApp.ENTITIES_VIEW
-      );
-    } else if (newStartView.equals(HassControlApp.SCENES_VIEW)) {
-      App.Storage.setValue(
-        HassControlApp.STORAGE_KEY_START_VIEW,
-        HassControlApp.SCENES_VIEW
-      );
-    } else {
-      throw new Lang.InvalidValueException();
-    }
-  }
-  
     function isLoggedIn() {
         return Hass.client.isLoggedIn();
     }
@@ -95,17 +79,7 @@ class HassControlApp extends App.AppBase {
     }
 
     function onStop(state) {
-        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
-            App.Storage.setValue("glance_entity", glanceEntity);
-            if (System.getDeviceSettings().isGlanceModeEnabled) {
-            //TODO IS UNCLEAR WHEN THIS IS TRUE
-                // on devices with glance mode store only if glance mode off
-                Hass.storeGroupEntities();
-            }
-        } else {
-            // on devices without glance mode store everytime
-            Hass.storeGroupEntities();
-        }
+        Hass.storeGroupEntities();
     }
 
 (:glance)
@@ -113,45 +87,29 @@ class HassControlApp extends App.AppBase {
         return [new AppGlance(glanceEntity)];
     }
 
-    // Return the initial view of your application here
+    /**
+    * Returns the initial full view of the widget.
+    * On devices with glance mode on jumps directly
+    * into entity list view, otherwise loads transition page.
+    */
     function getInitialView() {
-        viewController = new ViewController();
-    
+        self.viewController = new ViewController();
+
         Hass.loadGroupEntities();
         Hass.importScenesFromSettings();
         if (isLoggedIn()) {
             Hass.refreshImportedEntities(true);
         }
 
-        var view = null;
-        var delegate = null;
+        var view = new BaseView();
+        var delegate = new BaseDelegate();
 
-        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
-            if (System.getDeviceSettings().isGlanceModeEnabled) {
-                //IS THIS EVEN CALLED??? IF GLANCEMODEENABLED THAT LOADS DIFFERENT VIEW
-                var initialView = getStartView();
-
-                if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-                    var entityView = viewController.getEntityView();
-                    view = entityView[0];
-                    delegate = entityView[1];
-                }
-                if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-                    var sceneView = viewController.getSceneView();
-                    view = sceneView[0];
-                    delegate = sceneView[1];
-                }
-            }
+        if (System.getDeviceSettings() has :isGlanceModeEnabled && System.getDeviceSettings().isGlanceModeEnabled) {
+            var viewDelegate = self.viewController.getMainViewDelegate(getStartView());
+            view = viewDelegate[0];
+            delegate = viewDelegate[1];
         }
 
-        if (view == null || delegate == null) {
-            view = new BaseView();
-            delegate = new BaseDelegate();
-        }
-
-        return [
-            view,
-            delegate
-        ];
+        return [view, delegate];
     }
 }

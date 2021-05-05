@@ -28,9 +28,9 @@ module Hass {
         client = new Client();
     }
 
-	/**
-	* Returns name of group from settings set through Garmin Connect
-	*/
+    /**
+    * Returns name of group from settings set through Garmin Connect
+    */
     function getGroup() {
         var group = App.Properties.getValue("group");
         if (group.find("group.") == null) {
@@ -38,14 +38,14 @@ module Hass {
         }
         return group;
     }
-  
+
     /**
     * Returns all attributes of a single entity
     */
     function getEntityState(entityId) {
-        return _entitiesStates.get(entityId);        
+        return _entitiesStates.get(entityId);
     }
-  
+
     /**
     * Returns list of imported entity ids inclusive
     * manualy defined scenes
@@ -53,7 +53,7 @@ module Hass {
     function getImportedEntities() {
         return _entities;
     }
-    
+
     /**
     * Helper callback method used for extracting data from single
     * entity response.
@@ -61,7 +61,7 @@ module Hass {
     function _onRecievedGeneralEntity(err, data) {
         if (err != null) {
             if (_entitiesRefreshingSilent) {return;}
-        
+
             if (data != null && data[:context][:callback] != null) {
                 data[:context][:callback].invoke(err, null);
             } else {
@@ -69,13 +69,13 @@ module Hass {
             }
             return;
         }
-        
+
         var entityDict = {"state" => data[:body]["state"],
                           "attributes" => data[:body]["attributes"],
-                          "last_changed" => data[:body]["last_changed"]};        
+                          "last_changed" => data[:body]["last_changed"]};
         _entitiesStates.put(data[:body]["entity_id"], entityDict);
     }
-  
+
     /**
     * Callback when single entity state is returned form HASS
     */
@@ -83,7 +83,7 @@ module Hass {
         _onRecievedGeneralEntity(err, data);
         Ui.requestUpdate();
     }
-    
+
     /**
     * Callback when state of entity is returned form HASS.
     * This function is used only when refreshing all imported
@@ -92,7 +92,7 @@ module Hass {
     */
     function _onReceivedRefreshedImportedEntity(err, data) {
         _onRecievedGeneralEntity(err, data);
-        
+
         _entityToRefreshCounter++;
         if (_entityToRefreshCounter < _groupEntitiesCount) {
             // we have to keep refreshing until we achieve end of list
@@ -111,60 +111,64 @@ module Hass {
     function refreshSingleEntity(entityId) {
         client.getEntity(entityId, null, new Lang.Method(Hass, :_onReceivedSingleEntity));
     }
-  
+
     /**
     * Requests state of all imported entities from HASS
     * if there are manualy defined scene, insert them as well
     */
-  	function refreshImportedEntities(silent) {
-  	    if(_groupEntitiesCount < 1) {return;}
+    function refreshImportedEntities(silent) {
+        if(_groupEntitiesCount < 1) {return;}
 
-  	    _entitiesRefreshingSilent = silent;
+        _entitiesRefreshingSilent = silent;
         client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
-  	}
+    }
 
-	/**
-	* Callback called when HASS returns list with entities from the group
-	* Is removes all previously imported states
-	*/
+    /**
+    * Callback called when HASS returns list with entities from the group
+    * Is removes all previously imported states
+    */
     function _onReceivedGroupEntities(err, data) {
         if (err) {
             App.getApp().viewController.showError(err);
             return;
         }
-  
+
         _entities = new [0];
         _groupEntitiesCount = 0;
         var recvEntities = data[:body]["attributes"]["entity_id"];
         for (var i = 0; i < recvEntities.size(); i++) {
-      	    var recvEntityType = recvEntities[i].substring(0, recvEntities[i].find("."));
-      	    if (supportedEntityTypes.indexOf(recvEntityType) != -1) {
-      	        _entities.add(recvEntities[i]);
-      	        _groupEntitiesCount++;
-      	    }
-      	}
+            var recvEntityType = recvEntities[i].substring(0, recvEntities[i].find("."));
+            if (supportedEntityTypes.indexOf(recvEntityType) != -1) {
+                _entities.add(recvEntities[i]);
+                _groupEntitiesCount++;
+            }
+        }
 
         _entityToRefreshCounter = 0;
-  	    _entitiesStates = {};
+        _entitiesStates = {};
         //we have to import scenes again, because the dict was cleared
         importScenesFromSettings();
 
         refreshImportedEntities(false);
     }
-    
+
     /**
     * Stores entities from synchronized group into storage
     */
     function storeGroupEntities() {
-        var _entitWoManuScen = _entities.slice(0, _groupEntitiesCount);
+        if (_groupEntitiesCount == null || _groupEntitiesCount < 1) {
+            return;
+        }
+
+        var _entitiesWithoutManualScenes = _entities.slice(0, _groupEntitiesCount);
         var dictToStore = {};
-        for (var i = 0; i < _entitWoManuScen.size(); i++) {
-            dictToStore.put(_entitWoManuScen[i], _entitiesStates[_entitWoManuScen[i]]);
+        for (var i = 0; i < _entitiesWithoutManualScenes.size(); i++) {
+            dictToStore.put(_entitiesWithoutManualScenes[i], _entitiesStates[_entitiesWithoutManualScenes[i]]);
         }
         App.Storage.setValue(STORAGE_STATES, dictToStore);
-        App.Storage.setValue(STORAGE_GROUP_ENTITIES, _entitWoManuScen);
+        App.Storage.setValue(STORAGE_GROUP_ENTITIES, _entitiesWithoutManualScenes);
     }
-    
+
     /**
     * Loads entities from previously synchronized group from storage
     */
@@ -178,21 +182,21 @@ module Hass {
             _entities = [];
             _groupEntitiesCount = 0;
         }
-        
+
         _entitiesStates = (entStat instanceof Lang.Dictionary) ? entStat : {};
     }
 
     /*
     * Imports list of entities from HASS group
-    */	
+    */
     function importGroupEntities() {
         var group = getGroup();
-	
+
         if (group == null) {
             App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
             return;
         }
-	
+
         App.getApp().viewController.showLoader(Rez.Strings.LoaderRefreshing);
         client.getEntity(group, null, new Lang.Method(Hass, :_onReceivedGroupEntities));
     }
@@ -225,7 +229,7 @@ module Hass {
     function toggleEntityState(id, type, currState) {
         var action = null;
         var loadingText = currState.equals(STATE_ON) ? Rez.Strings.LoaderTurningOff : Rez.Strings.LoaderTurningOn;
-    
+
         switch(type) {
             case ENTITY_TYPE_AUTOMATION:
                 //TODO USE TOGGLE
@@ -260,10 +264,10 @@ module Hass {
 
         App.getApp().viewController.showLoader(loadingText);
         client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted));
-    
+
         return true;
     }
-    
+
     /**
     * Read manualy defined scene entities through connect iq
     */
@@ -271,10 +275,10 @@ module Hass {
         var sceneString = App.Properties.getValue("scenes");
         if (sceneString == null || sceneString.equals("")) {return;}
 
-		// remove old entities from states dict and entities array
-		var entitToRemoveFromDict = _entities.slice(_groupEntitiesCount, _entities.size());
-		for (var i=0; i < entitToRemoveFromDict.size(); i++) {
-    		_entitiesStates.remove(entitToRemoveFromDict[i]);
+        // remove old entities from states dict and entities array
+        var entitToRemoveFromDict = _entities.slice(_groupEntitiesCount, _entities.size());
+        for (var i=0; i < entitToRemoveFromDict.size(); i++) {
+            _entitiesStates.remove(entitToRemoveFromDict[i]);
         }
         _entities = _entities.slice(0, _groupEntitiesCount);
 
@@ -291,8 +295,8 @@ module Hass {
                 extractedScene = sceneString.substring(0, comPos);
                 sceneString = sceneString.substring(comPos+1, sceneString.length());
             }
-             
-            // remove white space from begin of string if present   
+
+            // remove white space from begin of string if present
             var spacPos = extractedScene.find(" ");
             while (spacPos != null) {
                 extractedScene = extractedScene.substring(spacPos+1, extractedScene.length());
@@ -306,7 +310,7 @@ module Hass {
                 extractedSceneName = extractedScene.substring(eqPos+1, extractedScene.length());
                 extractedScene  = extractedScene.substring(0,eqPos);
             }
- 
+
             // add prefix "scene." if not specified
             if (extractedScene.find("scene.") == null) {
                 extractedScene = "scene." + extractedScene;
@@ -314,8 +318,8 @@ module Hass {
 
             _entities.add(extractedScene);
             _entitiesStates.put(extractedScene,
-  	                          {"attributes" => {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName)},
-  	                           "state" => "scening"});         
+                              {"attributes" => {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName)},
+                               "state" => "scening"});
         } while (run);
     }
 }

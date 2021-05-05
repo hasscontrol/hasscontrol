@@ -9,10 +9,9 @@ using Hass;
 *   because too much memory is used, code has to be cut down
 *   especially Client.mc and its parents. When this happend in simulator
 *   select File->Reset All App Data
-* - is unclear when System.getDeviceSettings().isGlanceModeEnabled
-*   is true. This is used to store entities states into storage
-*   when onStop called, but only if glance is NOT on. Simulator
-*   is working the opposite way 
+* - currently it will work only on devices with enough ram like PRO versions,
+*   other devices only loads glance view and immediatelly stops the app,
+*   that means request cannot be done. solution = used background service
 */
 
 (:glance)
@@ -45,7 +44,7 @@ class AppGlance extends Ui.GlanceView {
         var height = dc.getHeight();
         var font = Graphics.FONT_MEDIUM;
         var text = "HassControl";
-        
+
         if (_glanceEntity) {
             var entityState = Hass.getEntityState(_glanceEntity);
             if (entityState != null && entityState.hasKey("state")) {text = entityState["state"];}
