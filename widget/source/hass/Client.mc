@@ -124,7 +124,7 @@ module Hass {
             );
         }
 
-        function setEntityState(entityId, entityType, action, callback) {
+        function setEntityState(entityId, entityType, action, callback, extraParams) {
             if (validateSettings(callback) != null) {
                 return;
             }
@@ -147,11 +147,15 @@ module Hass {
                 newState = "unlocked";
             }
 
+            var parameters = {"entity_id" => entityId};
+            if (extraParams != null) {
+                parameters = extraParams;
+                parameters.put("entity_id", entityId);
+            }
+
             makeAuthenticatedWebRequest(
                 _baseUrl + "/api/services/" + entityType + "/" + serviceAction,
-                {
-                    "entity_id" => entityId
-                },
+                parameters,
                 {
                     :method => Comm.HTTP_REQUEST_METHOD_POST,
                     :context => {

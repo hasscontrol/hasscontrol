@@ -215,6 +215,7 @@ module Hass {
             var entityId = changedStates[i]["entity_id"];
             if (_entitiesStates.hasKey(entityId)) {
                 _entitiesStates[entityId]["state"] = changedStates[i]["state"];
+                _entitiesStates[entityId]["attributes"] = changedStates[i]["attributes"];
                 _entitiesStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
             }
         }
@@ -263,7 +264,18 @@ module Hass {
         }
 
         App.getApp().viewController.showLoader(loadingText);
-        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted));
+        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted), null);
+
+        return true;
+    }
+
+    /**
+    * Manualy executes action with optional parameters.
+    * These are used for setting attributes like brightness
+    */
+    function setEntityState(id, type, action, params) {
+        App.getApp().viewController.showLoader(Rez.Strings.LoaderRunning);
+        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted), params);
 
         return true;
     }
