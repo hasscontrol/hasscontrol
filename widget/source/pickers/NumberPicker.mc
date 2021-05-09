@@ -3,6 +3,10 @@ using Toybox.Graphics;
 using Toybox.WatchUi;
 using Hass;
 
+/**
+* View and Delegate used for setting a singled number parameter
+* of specified defined HASS entity.
+*/
 class NumberPickerDelegate extends WatchUi.PickerDelegate {
     hidden var _entityId;
     hidden var _paramName;

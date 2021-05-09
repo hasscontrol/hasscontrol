@@ -2,8 +2,12 @@
     <string id="AppName">HassControl</string>
     <string id="LogOnPhone">Login in on\nyour phone</string>
     <!-- Misc -->
+    <string id="State">State</string>
     <string id="Percentage">Percentage</string>
     <string id="Mireds">Mireds</string>
+    <string id="Brightness">Brightness</string>
+    <string id="Colour">Color</string>
+    <string id="Temperature">Temperature</string>
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
     <!-- Loader Messages -->
