@@ -13,7 +13,10 @@ module Hass {
             ENTITY_ACTION_TURN_ON,
             ENTITY_ACTION_TURN_OFF,
             ENTITY_ACTION_LOCK,
-            ENTITY_ACTION_UNLOCK
+            ENTITY_ACTION_UNLOCK,
+            ENTITY_ACTION_DISARM,
+            ENTITY_ACTION_ARM_AWAY,
+            ENTITY_ACTION_ARM_HOME
         }
 
         hidden var _baseUrl;
@@ -145,6 +148,12 @@ module Hass {
             } else if (action == Client.ENTITY_ACTION_UNLOCK) {
                 serviceAction = "unlock";
                 newState = "unlocked";
+            } else if (action == Client.ENTITY_ACTION_DISARM) {
+                serviceAction = "alarm_disarm";
+            } else if (action == Client.ENTITY_ACTION_ARM_AWAY) {
+                serviceAction = "alarm_arm_away";
+            } else if (action == Client.ENTITY_ACTION_ARM_HOME) {
+                serviceAction = "alarm_arm_home";
             }
 
             var parameters = {"entity_id" => entityId};

@@ -1,6 +1,7 @@
 
 (:glance)
 module Hass {
+    const ENTITY_TYPE_ALARM_PANEL = "alarm_control_panel";
     const ENTITY_TYPE_AUTOMATION = "automation";
     const ENTITY_TYPE_BINARY_SENSOR = "binary_sensor";
     const ENTITY_TYPE_INPUT_BOOLEAN = "input_boolean";
@@ -10,7 +11,7 @@ module Hass {
     const ENTITY_TYPE_SCRIPT = "script";
     const ENTITY_TYPE_SENSOR = "sensor";
     const ENTITY_TYPE_SWITCH = "switch";
-    
+
     const STATE_ON = "on";
     const STATE_OFF = "off";
     const STATE_LOCKED = "locked";

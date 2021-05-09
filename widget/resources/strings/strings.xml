@@ -8,6 +8,8 @@
     <string id="Brightness">Brightness</string>
     <string id="Colour">Color</string>
     <string id="Temperature">Temperature</string>
+    <string id="ArmHome">Arm Home</string>
+    <string id="ArmAway">Arm Away</string>
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
     <!-- Loader Messages -->
@@ -41,4 +43,5 @@
     <string id="Error_Auth_Revoked">Login Revoked</string>
     <string id="ErrUnknown">Unknown error</string>
     <string id="ErrTitle">Failed</string>
+    <string id="ErrAlarmCode">Alarm code not supported</string>
 </strings>

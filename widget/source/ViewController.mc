@@ -29,6 +29,7 @@ class ViewController {
 
     function getEntityView() {
         var controller = new EntityListController([
+            Hass.ENTITY_TYPE_ALARM_PANEL,
             Hass.ENTITY_TYPE_AUTOMATION,
             Hass.ENTITY_TYPE_BINARY_SENSOR,
             Hass.ENTITY_TYPE_INPUT_BOOLEAN,
@@ -43,7 +44,7 @@ class ViewController {
             new EntityListDelegate(controller)
         ];
     }
-    
+
     /**
     * Returns view and delegate of main view
     */
@@ -52,10 +53,10 @@ class ViewController {
         if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
             view = getEntityView();
         }
-        
+
         return view;
     }
-    
+
     /**
     * Shows login on phone view
     */
@@ -72,7 +73,7 @@ class ViewController {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
         }
         _loginViewActive = false;
-    } 
+    }
 
     /**
     * Returns state of loader
@@ -86,7 +87,7 @@ class ViewController {
     /**
     * Shows immediatelly a loader with custom msg
     * @param rezString: identifier to string from xml
-    */ 
+    */
     function showLoader(rezString) {
         if (isShowingLoader()) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
@@ -130,7 +131,7 @@ class ViewController {
 
         if (error instanceof Error) {
             message = error.toShortString();
-            
+
             if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
                 message += "\ncode ";
                 message += error.responseCode;
@@ -146,7 +147,7 @@ class ViewController {
         } else if (error instanceof String) {
             message = error;
         }
-        
+
         System.println(error);
 
         if (_errorViewActive) {

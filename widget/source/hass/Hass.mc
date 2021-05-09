@@ -7,6 +7,7 @@ module Hass {
     const STORAGE_GROUP_ENTITIES = "hass_group_entities";
     const STORAGE_STATES = "hass_entities_state";
     const supportedEntityTypes = [
+        ENTITY_TYPE_ALARM_PANEL,
         ENTITY_TYPE_AUTOMATION,
         ENTITY_TYPE_BINARY_SENSOR,
         ENTITY_TYPE_INPUT_BOOLEAN,

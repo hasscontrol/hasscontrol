@@ -27,6 +27,7 @@ class HassControlApp extends App.AppBase {
    * - add action to entity type light (brightness)
    * - create pseudo glance mode for device without glance, refresh the one entity through backgorund service
    * - todo test on device if not connected to phone and garmin conenct not running
+   * - when light or alarm entit opened, refresh its state every 5-10 sec
   */
 
     /**

@@ -32,7 +32,7 @@ class EntityListController {
     }
 
     /**
-    * Loads imported entity ids from HASS 
+    * Loads imported entity ids from HASS
     */
     function refreshEntities() {
         _mEntities = [];
@@ -48,7 +48,7 @@ class EntityListController {
             _mIndex = 0;
         }
     }
-    
+
     /**
     * Returns current entity id
     */
@@ -58,9 +58,9 @@ class EntityListController {
 
     /**
     * Returns current entity type
-    */    
+    */
     function getCurrentEntityType() {
-    	if (getCount() == 0) {return null;}
+        if (getCount() == 0) {return null;}
         return _mEntities[_mIndex].substring(0, _mEntities[_mIndex].find("."));
     }
 
@@ -71,7 +71,7 @@ class EntityListController {
         if (getCount() == 0) {return null;}
         return Hass.getEntityState(_mEntities[_mIndex]);
     }
-    
+
     /**
     * Sets next entity index, rollover is handled
     */
@@ -79,7 +79,7 @@ class EntityListController {
         _mIndex += 1;
         if (_mIndex > getCount() - 1) {_mIndex = 0;}
     }
-    
+
     /**
     * Sets previous entity index, rollover is handled
     */
@@ -102,6 +102,8 @@ class EntityListController {
             case Hass.ENTITY_TYPE_LIGHT:
                 var deleg = new EntityTypeLightDelegate(curEntId);
                 return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_RIGHT);
+            case Hass.ENTITY_TYPE_ALARM_PANEL:
+                return Ui.pushView(new EntityTypeAlarmPanelView(curEntId), new EntityTypeAlarmPanelDelegate(curEntId), Ui.SLIDE_RIGHT);
             default:
                 var ret = Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
                 if (Attention has :vibrate && ret) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
@@ -167,7 +169,7 @@ class EntityListView extends Ui.View {
         var vw = dc.getWidth();
         var cvw = vw / 2;
         var drawable = null;
-        
+
         switch(type) {
             case Hass.ENTITY_TYPE_AUTOMATION:
                 drawable = state.equals(Hass.STATE_ON) ? Rez.Drawables.AutomationOn : Rez.Drawables.AutomationOff;
@@ -200,19 +202,19 @@ class EntityListView extends Ui.View {
         Lay.drawIcon(dc, drawable);
     }
 
-    function onUpdate(dc) {    
+    function onUpdate(dc) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
-        
+
         var entity = _mController.getCurrentEntityAttributes();
         var entityType = _mController.getCurrentEntityType();
-        
+
         if (entity == null) {
             Lay.drawIcon(dc, Rez.Drawables.SmileySad);
             Lay.drawName(dc, Ui.loadResource(Rez.Strings.NoEntities));
             return;
         }
-    
+
         if (entityType.equals("sensor")) {
             Lay.drawState(dc, entity["state"] + " " + entity["attributes"]["unit_of_measurement"]);
         } else {
