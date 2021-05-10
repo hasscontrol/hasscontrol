@@ -1,6 +1,7 @@
-using Toybox.WatchUi as Ui;
+using Toybox.Attention as Attention;
 using Toybox.Timer;
 using Toybox.Time;
+using Toybox.WatchUi as Ui;
 using Hass;
 
 /**
@@ -86,6 +87,7 @@ class ViewController {
 
     /**
     * Shows immediatelly a loader with custom msg
+    * if device supports vibration, executes short puls
     * @param rezString: identifier to string from xml
     */
     function showLoader(rezString) {
@@ -94,6 +96,7 @@ class ViewController {
         }
         _loaderActive = Time.now();
         Ui.pushView(new Ui.ProgressBar(Ui.loadResource(rezString), null), null, Ui.SLIDE_BLINK);
+        if (Attention has :vibrate) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
     }
 
     /**

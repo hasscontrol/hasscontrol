@@ -1,5 +1,4 @@
 using Toybox.Application as App;
-using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer;
 using ControlMenu;
@@ -100,15 +99,15 @@ class EntityListController {
 
         switch(getCurrentEntityType()) {
             case Hass.ENTITY_TYPE_LIGHT:
+                if(getCurrentEntityAttributes()["attributes"]["supported_features"] == 0) {break;}
                 var deleg = new EntityTypeLightDelegate(curEntId);
-                return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_RIGHT);
+                return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_LEFT);
             case Hass.ENTITY_TYPE_ALARM_PANEL:
-                return Ui.pushView(new EntityTypeAlarmPanelView(curEntId), new EntityTypeAlarmPanelDelegate(curEntId), Ui.SLIDE_RIGHT);
+                return Ui.pushView(new EntityTypeAlarmPanelView(curEntId), new EntityTypeAlarmPanelDelegate(curEntId), Ui.SLIDE_LEFT);
             default:
-                var ret = Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
-                if (Attention has :vibrate && ret) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
-                return ret;
+                break;
         }
+        return Hass.toggleEntityState(curEntId, getCurrentEntityType(), getCurrentEntityAttributes()["state"]);
     }
 }
 

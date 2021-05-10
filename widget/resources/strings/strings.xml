@@ -33,7 +33,7 @@
     <string id="Back">Back</string>
     <!-- ERROR -->
     <string id="Error_Unknown">Unknown error</string>
-    <string id="Error_PhoneNotConnected">Phone not connected</string>
+    <string id="Error_PhoneNotConnected">Phone\nnot connected</string>
 
     <string id="Error_Request_InvalidUrl">Check settings, invalid url</string>
     <string id="Error_Request_NotFound">Resource not found</string>

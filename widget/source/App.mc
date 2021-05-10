@@ -20,14 +20,11 @@ class HassControlApp extends App.AppBase {
    * TODO:
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
-   * - use background refreshing for glance view, because some devices are doing one shot showing
    * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
-   * - periodically refresh entities
    * - decrease code base for client.mc and its inheritances
-   * - add action to entity type light (brightness)
+   * - periodically refresh entities
+   * - use background refreshing for glance view, because some devices are doing one shot showing
    * - create pseudo glance mode for device without glance, refresh the one entity through backgorund service
-   * - todo test on device if not connected to phone and garmin conenct not running
-   * - when light or alarm entit opened, refresh its state every 5-10 sec
   */
 
     /**
@@ -95,11 +92,11 @@ class HassControlApp extends App.AppBase {
     * into entity list view, otherwise loads transition page.
     */
     function getInitialView() {
-        self.viewController = new ViewController();
-
         if (!System.getDeviceSettings().phoneConnected) {
-            return [new ErrorView(Ui.loadResource(Rez.String.Error_PhoneNotConnected)), null];
+            return [new ErrorView(Ui.loadResource(Rez.Strings.Error_PhoneNotConnected))];
         }
+
+        self.viewController = new ViewController();
 
         Hass.loadGroupEntities();
         Hass.importScenesFromSettings();
