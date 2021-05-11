@@ -1,203 +1,173 @@
-using Toybox.WatchUi as Ui;
+using Toybox.Attention as Attention;
 using Toybox.Timer;
 using Toybox.Time;
-
+using Toybox.WatchUi as Ui;
 using Hass;
 
+/**
+* ViewController shows and hides overlay views
+* like error, loader, login
+*/
 class ViewController {
-  hidden var _currentView;
-  hidden var _loaderView;
-  hidden var _errorView;
-  hidden var _errorDelegate;
-  hidden var _loginView;
-  hidden var _loginDelegate;
-  hidden var _loaderActive;
-  hidden var _loaderTimer;
-  hidden var _sceneController;
+    hidden var _errorViewActive;
+    hidden var _loginViewActive;
+    hidden var _loaderActive;
 
-  function initialize() {
-    _loaderView = new ProgressView();
-    _errorView = new ErrorView();
-    _errorDelegate = new ErrorDelegate();
-    _loginView = new LoginView();
-    _loginDelegate = new LoginDelegate();
-    _loaderActive = null;
-    _loaderTimer = new Timer.Timer();
-  }
-
-
-  // TODO:
-  // Delay för att stänga loader
-  // vad händer om användaren stänger loader innan appen stänger loader?
-
-
-  // Since the progress bar is not a normal view,
-  // We need to work around that it doesnt have onHide and onShow
-  function isShowingLoader() {
-    return _loaderActive != null && !_errorView.isActive() && !_loginView.isActive();
-  }
-
-  function getSceneView() {
-    var controller = new EntityListController(
-      [Hass.TYPE_SCENE]
-    );
-
-    return [
-      new EntityListView(controller),
-      new EntityListDelegate(controller)
-    ];
-  }
-
-  function getEntityView() {
-    var controller = new EntityListController(
-      [
-        Hass.TYPE_LIGHT,
-        Hass.TYPE_SWITCH,
-        Hass.TYPE_AUTOMATION,
-        Hass.TYPE_SCRIPT,
-        Hass.TYPE_LOCK,
-        Hass.TYPE_INPUT_BOOLEAN
-      ]
-    );
-
-    return [
-      new EntityListView(controller),
-      new EntityListDelegate(controller)
-    ];
-  }
-
-  function pushSceneView() {
-    var view = getSceneView();
-
-    Ui.pushView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function switchSceneView() {
-    var view = getSceneView();
-
-    Ui.switchToView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function pushEntityView() {
-    var view = getEntityView();
-
-    Ui.pushView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function switchEntityView() {
-    var view = getEntityView();
-
-    Ui.switchToView(
-      view[0],
-      view[1],
-      Ui.SLIDE_IMMEDIATE
-    );
-  }
-
-  function showLoginView(show) {
-    System.println("Show login? " + show);
-    if (!_loginView.isActive() && show == true) {
-      Ui.pushView(_loginView, _loginDelegate, Ui.SLIDE_IMMEDIATE);
-
-      Ui.requestUpdate();
+    function initialize() {
+        _errorViewActive = false;
+        _loginViewActive = false;
+        _loaderActive = null;
     }
 
-    if (_loginView.isActive() && show == false) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+    function getSceneView() {
+        var controller = new EntityListController([Hass.ENTITY_TYPE_SCENE]);
 
-      Ui.requestUpdate();
+        return [
+            new EntityListView(controller),
+            new EntityListDelegate(controller)
+        ];
     }
 
-  }
- 
-  function showLoader(text) {
-    if (isShowingLoader()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+    function getEntityView() {
+        var controller = new EntityListController([
+            Hass.ENTITY_TYPE_ALARM_PANEL,
+            Hass.ENTITY_TYPE_AUTOMATION,
+            Hass.ENTITY_TYPE_BINARY_SENSOR,
+            Hass.ENTITY_TYPE_INPUT_BOOLEAN,
+            Hass.ENTITY_TYPE_LIGHT,
+            Hass.ENTITY_TYPE_LOCK,
+            Hass.ENTITY_TYPE_SCRIPT,
+            Hass.ENTITY_TYPE_SENSOR,
+            Hass.ENTITY_TYPE_SWITCH]);
+
+        return [
+            new EntityListView(controller),
+            new EntityListDelegate(controller)
+        ];
     }
 
-    _loaderView.setDisplayString(text);
-
-    Ui.pushView(_loaderView, null, Ui.SLIDE_BLINK);
-
-    _loaderActive = Time.now();
-
-    Ui.requestUpdate();
-  }
-
-
-  function removeLoader() {
-    if (isShowingLoader()) {
-      // if loader is about to close too soon, we need to delay it
-      if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
-        _loaderTimer.start(method(:removeLoader), 500, false);
-        return;
-      }
-
-      Ui.popView(Ui.SLIDE_BLINK);
-    }
-
-    _loaderActive = null;
-  }
-
-  function removeLoaderImmediate() {
-    if (isShowingLoader()) {
-      Ui.popView(Ui.SLIDE_BLINK);
-    }
-
-    _loaderActive = null;
-  }
-
-  function showError(error) {
-    removeLoaderImmediate();
-
-    var message = "Unknown Error";
-
-    if (error instanceof Error) {
-      message = error.toShortString();
-
-      if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
-        message += "\ncode ";
-        message += error.responseCode;
-
-        if (error instanceof Hass.OAuthError) {
-          message += "\nauth ";
+    /**
+    * Returns view and delegate of main view
+    */
+    function getMainViewDelegate(viewId) {
+        var view = getSceneView();
+        if (viewId.equals(HassControlApp.ENTITIES_VIEW)) {
+            view = getEntityView();
         }
-      }
 
-      if (error.context != null) {
-        message += "\n" + error.context;
-      }
-    } else if (error instanceof String) {
-      message = error;
+        return view;
     }
 
-    if (_errorView.isActive()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+    /**
+    * Shows login on phone view
+    */
+    function showLoginView() {
+        Ui.pushView(new LoginView(), new LoginDelegate(method(:removeLoginView)), Ui.SLIDE_IMMEDIATE);
+        _loginViewActive = true;
     }
 
-    _errorView.setMessage(message);
-
-    Ui.pushView(_errorView, _errorDelegate, Ui.SLIDE_IMMEDIATE);
-
-    System.println(error);
-    Ui.requestUpdate();
-  }
-
-  function removeError() {
-    if (_errorView.isActive()) {
-      Ui.popView(Ui.SLIDE_IMMEDIATE);
+    /**
+    * Removes login on phone view
+    */
+    function removeLoginView() {
+        if (_loginViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _loginViewActive = false;
     }
-  }
+
+    /**
+    * Returns state of loader
+    * Since the progress bar is not a normal view,
+    * We need to work around that it doesnt have onHide and onShow
+    */
+    function isShowingLoader() {
+        return _loaderActive != null && !_errorViewActive && !_loginViewActive;
+    }
+
+    /**
+    * Shows immediatelly a loader with custom msg
+    * if device supports vibration, executes short puls
+    * @param rezString: identifier to string from xml
+    */
+    function showLoader(rezString) {
+        if (isShowingLoader()) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _loaderActive = Time.now();
+        Ui.pushView(new Ui.ProgressBar(Ui.loadResource(rezString), null), null, Ui.SLIDE_BLINK);
+        if (Attention has :vibrate) {Attention.vibrate([new Attention.VibeProfile(50, 100)]);}
+    }
+
+    /**
+    * Direct call to remove loader view
+    */
+    function _removeLoaderImmediate() {
+        if (isShowingLoader()) {
+            Ui.popView(Ui.SLIDE_BLINK);
+        }
+        _loaderActive = null;
+    }
+
+    /**
+    * Calls remove loader only if some checks are passed
+    */
+    function removeLoader() {
+        if (isShowingLoader()) {
+            // if loader is about to close too soon, we need to delay it
+            if (Time.now().add(new Time.Duration(-1)).lessThan(_loaderActive)) {
+                var loaderTimer = new Timer.Timer();
+                loaderTimer.start(method(:_removeLoaderImmediate), 500, false);
+                return;
+            }
+        }
+        _removeLoaderImmediate();
+    }
+
+    /**
+    * Shows error view
+    * @param error: error class object or simple string
+    */
+    function showError(error) {
+        _removeLoaderImmediate();
+        var message = Ui.loadResource(Rez.Strings.ErrUnknown);
+
+        if (error instanceof Error) {
+            message = error.toShortString();
+
+            if (error.code == Error.ERROR_UNKNOWN && error.responseCode != null) {
+                message += "\ncode ";
+                message += error.responseCode;
+
+                if (error instanceof Hass.OAuthError) {
+                    message += "\nauth ";
+                }
+            }
+
+            if (error.context != null) {
+                message += "\n" + error.context;
+            }
+        } else if (error instanceof String) {
+            message = error;
+        }
+
+        System.println(error);
+
+        if (_errorViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+
+        Ui.pushView(new ErrorView(message), new ErrorDelegate(), Ui.SLIDE_IMMEDIATE);
+        _errorViewActive = true;
+    }
+
+    /**
+    * Removes error view
+    */
+    function removeError() {
+        if (_errorViewActive) {
+            Ui.popView(Ui.SLIDE_IMMEDIATE);
+        }
+        _errorViewActive = false;
+    }
 }

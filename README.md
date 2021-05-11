@@ -14,10 +14,12 @@ Please read through the instructions below, I will try to guide you through the 
 
 - [HassControl](#hasscontrol)
   - [Prerequisites](#prerequisites)
+  - [Supported entity types table](#supported-entity-types)
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [Logging in](#logging-in)
   - [Group sync](#group-sync)
+  - [FAQ](#faq)
 
 
 ### Prerequisites
@@ -26,6 +28,24 @@ In order to use this widget you need to have an Home Assistant instance accessib
 As all communication from Garmin watches go thru the mobile device, you also need to have a paired mobile phone, and the Garmin Connect app needs to be running on that phone.
 
 As soon as you get out of range from the phone or closes the app the widget will stop functioning.
+
+
+### Supported entity types
+Currently only following Home Assistant entities are supported:
+
+Entity type | Note
+--- | ---
+binary_sensor | Only displays basic boolean state, device class is not supported.
+input_boolean | Toggling of its state is supported.
+light | Only turning on/off is supported, the rest like colour, brightness, etc. are not supported.
+lock | Both locking and unlocking are supported.
+switch | Only turning on/off, energy consumption and standby mode are not supported.
+automation* | Can be turned on/off.
+scene* | Execution
+script* | Execution
+
+
+\* marked are not entities in the true sense of the word, but why have two tables
 
 ### Installation
 The easiest way to install the app is to download and install the [ConnectIQ app](https://support.garmin.com/en-US/?faq=mmm2rz2WBI3zbdFQYdiwX8) from Garmin on your smartphone.
@@ -36,7 +56,7 @@ Once you have the app installed on your paired phone you can browse for widget a
 Open the widget settings in the ConnectIQ app.
 [How to Access the Settings of a Connect IQ App Using the Garmin Connect App](https://support.garmin.com/en-US/?faq=SPo0TFvhQO04O36Y5TYRh5)
 
-**Host**: This should be the url to the Home Assistant instance you would like to control.
+**Host**: This should be the url to the Home Assistant instance you would like to control. Remember only https url is supported by Garmin.
 
 **Long-Lived access token**: If you prefer generating an access token in Home Assistant instead of login in thru the garmin app you can paste your token here.
 
@@ -50,10 +70,12 @@ You can also use this field to "import" scenes if you don't want to create a gro
 
 I will describe this procedure in more detail below.
 
-***Note:*** *The default start view is filtered to scenes and will not show light, switches etc., the start view can be changed in the widget settings.*
+***Note:*** *The default start view is filtered to scenes and will not show light, switches etc., the start view can be changed in the widget settings in your Garmin device.*
 
 ### Logging in
 Once you have configured all settings in the ConnectIQ app, the next step will be to login.
+
+***Note:*** *If you've setup the `Long-Lived access token` you should be logged in automatically and can skip to the next section.*
 
 Since the watch doesn't have an suited interface for logging in to web pages, the login will be performed with the help of your paired smartphone.
 
@@ -76,9 +98,36 @@ If you are having problems logging in or if the widget is logged out frequently,
 Due to the limitations of the watch, there is no really good way of listing and adding entities directly from the watch.
 But the easiest way to add your entities is by [creating a new group](https://www.home-assistant.io/integrations/group/) in Home Assistant, and add all your entities there.
 
-Then configure the group you just added in the ConnectIQ settings as described [above](#configuration).
+Your group configuration can look like this:
+```
+# Example configuration.yaml entry
+group:
+  garmin:
+    name: Garmin
+    entities:
+      - light.bathroom
+      - switch.tv
+      - script.turn_lights_for_10_min
+```
+***Note***: *Remember after changing the configuration, you have to either reload the groups or restart the Home Assitant.*
 
-Once you have added the group in settings, open the widget and the menu. Then go into settings and select `refresh entities`.
-Once that is done, all entities added to that group in Home Assistant will be imported and available on the watch.
+Then write the id of the group you have just created (in our case `group.garmin`) into the ConnectIQ app widget settings as described [above](#configuration).
 
-At any time, you can repeat this procedure to add, update or remove entities from your watch.
+Once you have added the group into ConnectIQ app widget settings, open the widget on your Garmin device and access the menu (on watches with touchscreen using the Press and Hold gesture). Then go into `Settings` and select `Refresh entities`.
+Once that is done, all entities added to that group in Home Assistant and supported by HassControl will be imported and available on the watch.
+
+If you done some modification to the group in Home Assistant, you can at any time repeat this procedure to add, update or remove entities from your watch.
+
+### FAQ
+
+#### Error message: "Check settings, invalid url"
+Check if you are using correct url with `https` prefix, because only secure HTTPS communication is allowed. This limitation comes from Garmin. 
+
+#### Some entities from my group are missing in my Garmin device
+Not all Home Assistant entity types are currently supported by HassControl, you should take a look at [supported entity types table](#supported-entity-types).
+
+#### Changed entity state doesn't show immediately in HassControl
+There is a rare occasion when someone changes state of an entity (for example turns the light on), while you are actively using this widget. In this case its state in your Garmin device will not correspond to its actual one. It has to be synced again. There are three option how to sync it. You either toggle it's state, select `Refresh entities` in `Settings` or reopen the widget (the state of all your entities is automatically received from Home Assistant every time you start the widget).
+
+***Note***: *Because after predefined timeout period every widget is automatically closed, you should never experience this type of data discrepancy.*
+

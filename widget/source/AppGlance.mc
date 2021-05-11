@@ -1,30 +1,57 @@
 using Toybox.WatchUi as Ui;
+using Toybox.Timer;
 using Hass;
+
+/**
+* Semi working example, less than proof of concept
+* Known bugs:
+* - sometimes occures Illegal Access (Out of Bounds) on onWebResponse(),
+*   because too much memory is used, code has to be cut down
+*   especially Client.mc and its parents. When this happend in simulator
+*   select File->Reset All App Data
+* - currently it will work only on devices with enough ram like PRO versions,
+*   other devices only loads glance view and immediatelly stops the app,
+*   that means request cannot be done. solution = used background service
+*/
 
 (:glance)
 class AppGlance extends Ui.GlanceView {
-  var _mClient;
+    var _glanceEntity;
+    var _timer;
 
-  function initialize() {
-    GlanceView.initialize();
-  }
+    function initialize(glEn) {
+        GlanceView.initialize();
+        _glanceEntity = glEn;
+    }
 
-  function getLayout() {
-    setLayout([]);
-  }
+    function onHide() {
+        if (_timer) {_timer.stop();}
+    }
 
-  function onUpdate(dc) {
-    GlanceView.onUpdate(dc);
+    function onShow() {
+        if (_glanceEntity) {
+            _timer = new Timer.Timer();
+            _timer.start(method(:onTimerDone), 30000, true);
+            onTimerDone();
+        }
+    }
 
-    var height = dc.getHeight();
+    function onTimerDone() {
+        Hass.refreshSingleEntity(_glanceEntity);
+    }
 
-    var font = Graphics.FONT_MEDIUM;
-    var text = "HassControl";
+    function onUpdate(dc) {
+        var height = dc.getHeight();
+        var font = Graphics.FONT_MEDIUM;
+        var text = "HassControl";
 
-    var textDimensions = dc.getTextDimensions(text, font);
-    var textHeight = textDimensions[1];
+        if (_glanceEntity) {
+            var entityState = Hass.getEntityState(_glanceEntity);
+            if (entityState != null && entityState.hasKey("state")) {text = entityState["state"];}
+        }
 
-    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    dc.drawText(5, (height / 2) - (textHeight / 2), font, text, Graphics.TEXT_JUSTIFY_LEFT);
-  }
+        var textHeight = dc.getTextDimensions(text, font)[1];
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.drawText(5, (height / 2) - (textHeight / 2), font, text, Graphics.TEXT_JUSTIFY_LEFT);
+    }
 }

@@ -1,395 +1,338 @@
 using Toybox.Application as App;
+using Toybox.Lang as Lang;
 using Toybox.WatchUi as Ui;
-using Toybox.System;
 
-using Utils;
-
+(:glance)
 module Hass {
-  const STORAGE_KEY = "Hass/entities";
+    const STORAGE_GROUP_ENTITIES = "hass_group_entities";
+    const STORAGE_STATES = "hass_entities_state";
+    const supportedEntityTypes = [
+        ENTITY_TYPE_ALARM_PANEL,
+        ENTITY_TYPE_AUTOMATION,
+        ENTITY_TYPE_BINARY_SENSOR,
+        ENTITY_TYPE_INPUT_BOOLEAN,
+        ENTITY_TYPE_LIGHT,
+        ENTITY_TYPE_LOCK,
+        ENTITY_TYPE_SCENE,
+        ENTITY_TYPE_SCRIPT,
+        ENTITY_TYPE_SENSOR,
+        ENTITY_TYPE_SWITCH
+    ];
+    var client = null;
+    var _entities;
+    var _entitiesStates = {};
+    var _groupEntitiesCount;
+    var _entityToRefreshCounter = 0;
+    var _entitiesRefreshingSilent = false;
 
-  var client = null;
-  var _entities = new [0];
-  var _entitiesToRefresh = new [0];
-  var _continueRefreshOnError = false;
-
-  function initClient() {
-    client = new Client();
-  }
-
-  function getGroup() {
-    var group = App.Properties.getValue("group");
-
-    if (group.find("group.") == null) {
-      group = "group." + group;
+    function initClient() {
+        client = new Client();
     }
 
-    return group;
-  }
-
-  function getEntities() {
-    return _entities;
-  }
-
-  function getEntitiesByTypes(types) {
-    var entities = new [0];
-
-    for (var eI = 0; eI < _entities.size(); eI++) {
-      var match = false;
-
-      for (var tI = 0; tI < types.size(); tI++) {
-        if (_entities[eI].getType() == types[tI]) {
-          match = true;
-          break;
+    /**
+    * Returns name of group from settings set through Garmin Connect
+    */
+    function getGroup() {
+        var group = App.Properties.getValue("group");
+        if (group.find("group.") == null) {
+            group = "group." + group;
         }
-      }
-
-      if (match) {
-        entities.add(_entities[eI]);
-      }
+        return group;
     }
 
-    return entities;
-  }
-
-  function getEntity(id) {
-    var entity = null;
-
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].getId().equals(id)) {
-        entity = _entities[i];
-        break;
-      }
+    /**
+    * Returns all attributes of a single entity
+    */
+    function getEntityState(entityId) {
+        return _entitiesStates.get(entityId);
     }
 
-    return entity;
-  }
-
-  function storeEntities() {
-    var entities = new [0];
-
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].isExternal()) {
-        continue;
-      }
-      entities.add(_entities[i].toDict());
+    /**
+    * Returns list of imported entity ids inclusive
+    * manualy defined scenes
+    */
+    function getImportedEntities() {
+        return _entities;
     }
 
-    App.Storage.setValue(STORAGE_KEY, entities);
-  }
+    /**
+    * Helper callback method used for extracting data from single
+    * entity response.
+    */
+    function _onRecievedGeneralEntity(err, data) {
+        if (err != null) {
+            if (_entitiesRefreshingSilent) {return;}
 
-  function loadScenesFromSettings() {
-    var scenes = Utils.getScenesFromSettings();
-
-    // first remove all external scenes to make sure we are not persisting any old scenes
-    var entitiesToRemove = new [0];
-    for (var i = 0; i < _entities.size(); i++) {
-      if (_entities[i].isExternal()) {
-        entitiesToRemove.add(_entities[i]);
-      }
-    }
-    for (var i = 0; i < entitiesToRemove.size(); i++) {
-      _entities.remove(entitiesToRemove[i]);
-    }
-    entitiesToRemove = null;
-
-    for (var i = 0; i < scenes.size(); i++) {
-      var entity = getEntity(scenes[i][0]);
-
-      if (entity != null) {
-        // We only set the name if it's different than the id
-        if (!scenes[i][0].equals(scenes[i][1])) {
-          entity.setName(scenes[i][1]);
-        }
-      } else {
-        _entities.add(new Entity({
-          :id => scenes[i][0],
-          :name => scenes[i][1],
-          :state => "scening",
-          :ext => true
-        }));
-      }
-    }
-  }
-
-  function loadStoredEntities() {
-    var entities = App.Storage.getValue(STORAGE_KEY);
-
-    _entities = new [0];
-
-    if (entities == null) {
-      return;
-    }
-
-    for (var i = 0; i < entities.size(); i++) {
-      _entities.add(Entity.createFromDict(entities[i]));
-    }
-
-    loadScenesFromSettings();
-
-    System.println("Loaded entities: " + _entities);
-  }
-
-  function _onReceiveEntity(err, data) {
-    if (err != null) {
-      if (data != null && data[:context][:callback] != null) {
-        data[:context][:callback].invoke(err, null);
-      } else {
-        App.getApp().viewController.showError(err);
-      }
-      return;
-    }
-
-    var name = null;
-    var state = null;
-
-    if (data != null && data[:body] != null) {
-      if (data[:body]["attributes"] != null) {
-        name = data[:body]["attributes"]["friendly_name"];
-      }
-      state = data[:body]["state"];
-    }
-
-    var entity = getEntity(data[:body]["entity_id"]);
-
-    if (name != null) {
-      entity.setName(name);
-    }
-
-    if (state != null) {
-      entity.setState(state);
-    } else {
-      entity.setState(Entity.STATE_UNKNOWN);
-    }
-
-    if (data[:context][:callback] != null) {
-      data[:context][:callback].invoke(null, entity);
-    }
-  }
-
-  function refreshEntity(entity, callback) {
-    client.getEntity(
-      entity.getId(),
-      {
-        :entity => entity,
-        :callback => callback
-      },
-      Utils.method(Hass, :_onReceiveEntity)
-    );
-  }
-
-  function _refreshPendingEntities(error, noop) {
-    if (error != null && !_continueRefreshOnError) {
-      App.getApp().viewController.removeLoader();
-      App.getApp().viewController.showError(error);
-
-      // We need to finalize with reading the scenes from settings again,
-      // so that the name config takes precedence
-      loadScenesFromSettings();
-
-      storeEntities();
-
-      Ui.requestUpdate();
-      return;
-    }
-
-    if (_entitiesToRefresh.size() > 0) {
-      var entity = _entitiesToRefresh[0];
-
-      _entitiesToRefresh.remove(entity);
-
-      refreshEntity(entity, Utils.method(Hass, :_refreshPendingEntities));
-    } else {
-      // We need to finalize with reading the scenes from settings again,
-      // so that the name config takes precedence
-      loadScenesFromSettings();
-
-      storeEntities();
-
-      Ui.requestUpdate();
-
-      App.getApp().viewController.removeLoader();
-    }
-  }
-
-  function refreshAllEntities(continueOnError) {
-    _entitiesToRefresh = new [0];
-    _continueRefreshOnError = continueOnError == true;
-
-    for (var i = 0; i < _entities.size(); i++) {
-      _entitiesToRefresh.add(_entities[i]);
-    }
-
-    _refreshPendingEntities(null, null);
-  }
-
-  function _onReceiveEntities(err, data) {
-    if (err == null) {
-      var entities = data[:body]["attributes"]["entity_id"];
-
-      _entities = new [0];
-
-      for (var i = 0; i < entities.size(); i++) {
-        var entity = getEntity(entities[i]);
-
-        if (entity == null) {
-          _entities.add(new Entity({
-            :id => entities[i],
-            :name => entities[i],
-            :state => null
-          }));
-        } else {
-          entity.setExternal(false);
-        }
-      }
-
-      loadScenesFromSettings();
-
-      refreshAllEntities(false);
-    } else {
-      App.getApp().viewController.removeLoader();
-      App.getApp().viewController.showError(err);
-    }
-  }
-
-  function importEntities() {
-    var group = getGroup();
-
-    if (group == null || group.find("group.") == null) {
-      App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
-      return;
-    }
-
-    App.getApp().viewController.showLoader("Refreshing");
-
-    client.getEntity(group, null, Utils.method(Hass, :_onReceiveEntities));
-  }
-
-  function onToggleEntityStateCompleted(error, data) {
-    if (error != null) {
-      App.getApp().viewController.removeLoaderImmediate();
-      App.getApp().viewController.showError(error);
-      return;
-    }
-
-    if (data[:context][:state] != null) {
-      var entity = getEntity(data[:context][:entityId]);
-
-      if (entity != null) {
-        var newState = data[:context][:state];
-
-        if (entity.getType() == Entity.TYPE_SCRIPT) {
-          newState = Entity.STATE_OFF;
+            if (data != null && data[:context][:callback] != null) {
+                data[:context][:callback].invoke(err, null);
+            } else {
+                App.getApp().viewController.showError(err);
+            }
+            return;
         }
 
-        entity.setState(newState);
+        var entityDict = {"state" => data[:body]["state"],
+                          "attributes" => data[:body]["attributes"],
+                          "last_changed" => data[:body]["last_changed"]};
+        _entitiesStates.put(data[:body]["entity_id"], entityDict);
+    }
 
-        storeEntities();
+    /**
+    * Callback when single entity state is returned form HASS
+    */
+    function _onReceivedSingleEntity(err, data) {
+        _onRecievedGeneralEntity(err, data);
         Ui.requestUpdate();
-      }
     }
 
-    App.getApp().viewController.removeLoader();
-  }
+    /**
+    * Callback when state of entity is returned form HASS.
+    * This function is used only when refreshing all imported
+    * group entities at once. Caution we have to call one
+    * web request after another, otherwise the app will crash.
+    */
+    function _onReceivedRefreshedImportedEntity(err, data) {
+        _onRecievedGeneralEntity(err, data);
 
-  function toggleEntityState(entity) {
-    var entityId = entity.getId();
-    var currentState = entity.getState();
-    var entityType = null;
-    var action = null;
-    var loadingText = "Loading";
-
-    if (entity.getType() == Entity.TYPE_SCRIPT) {
-      action = Client.ENTITY_ACTION_TURN_ON;
-      loadingText = "Running";
-    } else if (entity.getType() == Entity.TYPE_LOCK) {
-      if (currentState == Entity.STATE_UNLOCKED) {
-        action = Client.ENTITY_ACTION_LOCK;
-        loadingText = "Locking";
-      } else if (currentState == Entity.STATE_LOCKED) {
-        action = Client.ENTITY_ACTION_UNLOCK;
-        loadingText = "Unlocking";
-      }
-    } else {
-      if (currentState == Entity.STATE_ON) {
-        action = Client.ENTITY_ACTION_TURN_OFF;
-        loadingText = "Turning off";
-      } else if (currentState == Entity.STATE_OFF) {
-        action = Client.ENTITY_ACTION_TURN_ON;
-        loadingText = "Turning on";
-      }
+        _entityToRefreshCounter++;
+        if (_entityToRefreshCounter < _groupEntitiesCount) {
+            // we have to keep refreshing until we achieve end of list
+            client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
+        } else {
+            // all entities are refreshed, remove loader and resets silent refresher
+            App.getApp().viewController.removeLoader();
+            _entitiesRefreshingSilent = false;
+            Ui.requestUpdate();
+        }
     }
 
-    if (entity.getType() == Entity.TYPE_SCENE) {
-      entityType = "scene";
-      action = null;
-    } else if (entity.getType() == Entity.TYPE_LIGHT) {
-      entityType = "light";
-    } else if (entity.getType() == Entity.TYPE_SWITCH) {
-      entityType = "switch";
-    } else if (entity.getType() == Entity.TYPE_AUTOMATION) {
-      entityType = "automation";
-    } else if (entity.getType() == Entity.TYPE_SCRIPT) {
-      entityType = "script";
-    } else if (entity.getType() == Entity.TYPE_LOCK) {
-      entityType = "lock";
-    } else if (entity.getType() == Entity.TYPE_INPUT_BOOLEAN) {
-      entityType = "input_boolean";
+    /**
+    * Requests state of single entity from HASS
+    */
+    function refreshSingleEntity(entityId) {
+        client.getEntity(entityId, null, new Lang.Method(Hass, :_onReceivedSingleEntity));
     }
 
-    App.getApp().viewController.showLoader(loadingText);
+    /**
+    * Requests state of all imported entities from HASS
+    * if there are manualy defined scene, insert them as well
+    */
+    function refreshImportedEntities(silent) {
+        if(_groupEntitiesCount < 1) {return;}
 
-    client.setEntityState(entityId, entityType, action, Utils.method(Hass, :onToggleEntityStateCompleted));
-  }
-}
+        _entitiesRefreshingSilent = silent;
+        client.getEntity(_entities[_entityToRefreshCounter], null, new Lang.Method(Hass, :_onReceivedRefreshedImportedEntity));
+    }
 
-class HassController {
+    /**
+    * Callback called when HASS returns list with entities from the group
+    * Is removes all previously imported states
+    */
+    function _onReceivedGroupEntities(err, data) {
+        if (err) {
+            App.getApp().viewController.showError(err);
+            return;
+        }
 
+        _entities = new [0];
+        _groupEntitiesCount = 0;
+        var recvEntities = data[:body]["attributes"]["entity_id"];
+        for (var i = 0; i < recvEntities.size(); i++) {
+            var recvEntityType = recvEntities[i].substring(0, recvEntities[i].find("."));
+            if (supportedEntityTypes.indexOf(recvEntityType) != -1) {
+                _entities.add(recvEntities[i]);
+                _groupEntitiesCount++;
+            }
+        }
 
+        _entityToRefreshCounter = 0;
+        _entitiesStates = {};
+        //we have to import scenes again, because the dict was cleared
+        importScenesFromSettings();
 
-  // function _refreshPendingEntities() {
-  //   var entity = null;
+        refreshImportedEntities(false);
+    }
 
-  //   for (var i = 0; i < _entities.size(); i++) {
-  //     if (_entities[i].getState() == null) {
-  //       entity = _entities[i];
-  //       break;
-  //     }
-  //   }
+    /**
+    * Stores entities from synchronized group into storage
+    */
+    function storeGroupEntities() {
+        if (_groupEntitiesCount == null || _groupEntitiesCount < 1) {
+            return;
+        }
 
-  //   if (entity != null) {
-  //     client.getEntity(entity.getId(), method(:onReceiveRefreshedEntity));
-  //   } else {
-  //     System.println(_entities);
-  //     storeEntities();
-  //     App.getApp().viewController.removeLoader();
-  //   }
-  // }
+        var _entitiesWithoutManualScenes = _entities.slice(0, _groupEntitiesCount);
+        var dictToStore = {};
+        for (var i = 0; i < _entitiesWithoutManualScenes.size(); i++) {
+            dictToStore.put(_entitiesWithoutManualScenes[i], _entitiesStates[_entitiesWithoutManualScenes[i]]);
+        }
+        App.Storage.setValue(STORAGE_STATES, dictToStore);
+        App.Storage.setValue(STORAGE_GROUP_ENTITIES, _entitiesWithoutManualScenes);
+    }
 
-  // function onReceiveEntities(err, data) {
-  //   if (err == null) {
-  //     var entities = data[:body]["attributes"]["entity_id"];
+    /**
+    * Loads entities from previously synchronized group from storage
+    */
+    function loadGroupEntities() {
+        var grEnt = App.Storage.getValue(STORAGE_GROUP_ENTITIES);
+        var entStat = App.Storage.getValue(STORAGE_STATES);
+        if (grEnt instanceof Lang.Array) {
+            _entities = grEnt;
+            _groupEntitiesCount = grEnt.size();
+        } else {
+            _entities = [];
+            _groupEntitiesCount = 0;
+        }
 
-  //     _entities = new [0];
+        _entitiesStates = (entStat instanceof Lang.Dictionary) ? entStat : {};
+    }
 
-  //     for (var i = 0; i < entities.size(); i++) {
-  //       _entities.add(new Entity({
-  //         :id => entities[i],
-  //         :name => "",
-  //         :state => null
-  //       }));
-  //     }
+    /*
+    * Imports list of entities from HASS group
+    */
+    function importGroupEntities() {
+        var group = getGroup();
 
-  //     _refreshPendingEntities();
-  //   } else {
-  //     App.getApp().viewController.showError(err);
-  //   }
-  // }
+        if (group == null) {
+            App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
+            return;
+        }
 
-  // function refreshAllEntityStates() {
-  //     for (var i = 0; i < _entities.size(); i++) {
-  //       _entities[i].setState(null);
-  //     }
+        App.getApp().viewController.showLoader(Rez.Strings.LoaderRefreshing);
+        client.getEntity(group, null, new Lang.Method(Hass, :_onReceivedGroupEntities));
+    }
 
-  //     _refreshPendingEntities();
-  // }
+    /**
+    * Callback called when state/scene/etc. is toggled successfully
+    */
+    function onToggleEntityStateCompleted(error, data) {
+        if (error != null) {
+            App.getApp().viewController.showError(error);
+            return;
+        }
+
+        var changedStates = data[:body];
+        for (var i = 0; i < changedStates.size(); i++) {
+            var entityId = changedStates[i]["entity_id"];
+            if (_entitiesStates.hasKey(entityId)) {
+                _entitiesStates[entityId]["state"] = changedStates[i]["state"];
+                _entitiesStates[entityId]["attributes"] = changedStates[i]["attributes"];
+                _entitiesStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
+            }
+        }
+
+        App.getApp().viewController.removeLoader();
+    }
+
+    /*
+    * Executes action on entity, script or scene
+    * Entity is toggled
+    */
+    function toggleEntityState(id, type, currState) {
+        var action = null;
+        var loadingText = currState.equals(STATE_ON) ? Rez.Strings.LoaderTurningOff : Rez.Strings.LoaderTurningOn;
+
+        switch(type) {
+            case ENTITY_TYPE_AUTOMATION:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_INPUT_BOOLEAN:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_LIGHT:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            case ENTITY_TYPE_LOCK:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                loadingText = currState.equals(STATE_LOCKED) ? Rez.Strings.LoaderUnlocking : Rez.Strings.LoaderLocking;
+                break;
+            case ENTITY_TYPE_SCENE:
+                loadingText = Rez.Strings.LoaderLoading;
+                break;
+            case ENTITY_TYPE_SCRIPT:
+                loadingText = Rez.Strings.LoaderRunning;
+                break;
+            case ENTITY_TYPE_SWITCH:
+                //TODO USE TOGGLE
+                action = currState.equals(STATE_ON) ? Client.ENTITY_ACTION_TURN_OFF : Client.ENTITY_ACTION_TURN_ON;
+                break;
+            default:
+                return false;
+        }
+
+        App.getApp().viewController.showLoader(loadingText);
+        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted), null);
+
+        return true;
+    }
+
+    /**
+    * Manualy executes action with optional parameters.
+    * These are used for setting attributes like brightness
+    */
+    function setEntityState(id, type, action, params) {
+        App.getApp().viewController.showLoader(Rez.Strings.LoaderRunning);
+        client.setEntityState(id, type, action, new Lang.Method(Hass, :onToggleEntityStateCompleted), params);
+
+        return true;
+    }
+
+    /**
+    * Read manualy defined scene entities through connect iq
+    */
+    function importScenesFromSettings() {
+        var sceneString = App.Properties.getValue("scenes");
+        if (sceneString == null || sceneString.equals("")) {return;}
+
+        // remove old entities from states dict and entities array
+        var entitToRemoveFromDict = _entities.slice(_groupEntitiesCount, _entities.size());
+        for (var i=0; i < entitToRemoveFromDict.size(); i++) {
+            _entitiesStates.remove(entitToRemoveFromDict[i]);
+        }
+        _entities = _entities.slice(0, _groupEntitiesCount);
+
+        var run = true;
+        do {
+            var comPos = sceneString.find(",");
+            var extractedScene;
+
+            // extract one scene after another when sepparated by comma
+            if (comPos == null) {
+                extractedScene = sceneString;
+                run = false;
+            } else {
+                extractedScene = sceneString.substring(0, comPos);
+                sceneString = sceneString.substring(comPos+1, sceneString.length());
+            }
+
+            // remove white space from begin of string if present
+            var spacPos = extractedScene.find(" ");
+            while (spacPos != null) {
+                extractedScene = extractedScene.substring(spacPos+1, extractedScene.length());
+                spacPos = extractedScene.find(" ");
+            }
+
+            // extract manually defined name using equals sign if present
+            var eqPos = extractedScene.find("=");
+            var extractedSceneName = null;
+            if (eqPos != null) {
+                extractedSceneName = extractedScene.substring(eqPos+1, extractedScene.length());
+                extractedScene  = extractedScene.substring(0,eqPos);
+            }
+
+            // add prefix "scene." if not specified
+            if (extractedScene.find("scene.") == null) {
+                extractedScene = "scene." + extractedScene;
+            }
+
+            _entities.add(extractedScene);
+            _entitiesStates.put(extractedScene,
+                              {"attributes" => {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName)},
+                               "state" => "scening"});
+        } while (run);
+    }
 }

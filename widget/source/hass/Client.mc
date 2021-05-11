@@ -7,13 +7,16 @@ using Hass;
 module Hass {
     const AUTH_ENDPOINT = "/auth/authorize";
     const TOKEN_ENDPOINT = "/auth/token";
-
+(:glance)
     class Client extends Hass.OAuthClient {
         static enum {
             ENTITY_ACTION_TURN_ON,
             ENTITY_ACTION_TURN_OFF,
             ENTITY_ACTION_LOCK,
-            ENTITY_ACTION_UNLOCK
+            ENTITY_ACTION_UNLOCK,
+            ENTITY_ACTION_DISARM,
+            ENTITY_ACTION_ARM_AWAY,
+            ENTITY_ACTION_ARM_HOME
         }
 
         hidden var _baseUrl;
@@ -124,7 +127,7 @@ module Hass {
             );
         }
 
-        function setEntityState(entityId, entityType, action, callback) {
+        function setEntityState(entityId, entityType, action, callback, extraParams) {
             if (validateSettings(callback) != null) {
                 return;
             }
@@ -145,13 +148,23 @@ module Hass {
             } else if (action == Client.ENTITY_ACTION_UNLOCK) {
                 serviceAction = "unlock";
                 newState = "unlocked";
+            } else if (action == Client.ENTITY_ACTION_DISARM) {
+                serviceAction = "alarm_disarm";
+            } else if (action == Client.ENTITY_ACTION_ARM_AWAY) {
+                serviceAction = "alarm_arm_away";
+            } else if (action == Client.ENTITY_ACTION_ARM_HOME) {
+                serviceAction = "alarm_arm_home";
+            }
+
+            var parameters = {"entity_id" => entityId};
+            if (extraParams != null) {
+                parameters = extraParams;
+                parameters.put("entity_id", entityId);
             }
 
             makeAuthenticatedWebRequest(
                 _baseUrl + "/api/services/" + entityType + "/" + serviceAction,
-                {
-                    "entity_id" => entityId
-                },
+                parameters,
                 {
                     :method => Comm.HTTP_REQUEST_METHOD_POST,
                     :context => {

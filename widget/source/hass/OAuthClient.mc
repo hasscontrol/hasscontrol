@@ -74,7 +74,11 @@ module Hass {
         function _setIsLoggingIn(isLoggingIn) {
             System.println("is logging in: " + isLoggingIn);
             _isLoggingIn = isLoggingIn;
-            App.getApp().viewController.showLoginView(_isLoggingIn);
+            if (isLoggingIn) {
+                App.getApp().viewController.showLoginView();
+            } else {
+                App.getApp().viewController.removeLoginView();
+            }
         }
 
         function isLoggedIn() {
@@ -228,7 +232,6 @@ module Hass {
 
         function onWebResponse(responseCode, body, context) {
             var error = null;
-
             if (responseCode < 200 || responseCode >= 300) {
                 error = new RequestError(responseCode);
 
@@ -245,7 +248,7 @@ module Hass {
                 }
             }
 
-            System.println(context);
+//            System.println(context);
 
             context[:responseCallback].invoke(error, {
                 :responseCode => responseCode,

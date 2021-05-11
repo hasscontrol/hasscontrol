@@ -1,15 +1,39 @@
 <strings>
     <string id="AppName">HassControl</string>
-
-
+    <string id="LogOnPhone">Login in on\nyour phone</string>
+    <!-- Misc -->
+    <string id="State">State</string>
+    <string id="Percentage">Percentage</string>
+    <string id="Mireds">Mireds</string>
+    <string id="Brightness">Brightness</string>
+    <string id="Colour">Color</string>
+    <string id="Temperature">Temperature</string>
+    <string id="ArmHome">Arm Home</string>
+    <string id="ArmAway">Arm Away</string>
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
-
-
-
+    <!-- Loader Messages -->
+    <string id="LoaderRefreshing">Refreshing</string>
+    <string id="LoaderLoading">Loading</string>
+    <string id="LoaderRunning">Running</string>
+    <string id="LoaderUnlocking">Unlocking</string>
+    <string id="LoaderLocking">Locking</string>
+    <string id="LoaderTurningOff">Turning off</string>
+    <string id="LoaderTurningOn">Turning on</string>
+    <!-- Menu -->
+    <string id="MenuGlanceEntity">Glance entity</string>
+    <string id="Selected">selected</string>
+    <string id="Scenes">Scenes</string>
+    <string id="Entities">Entities</string>
+    <string id="Settings">Settings</string>
+    <string id="Login">Login</string>
+    <string id="Logout">Logout</string>
+    <string id="StartView">Start View</string>
+    <string id="RefreshEntities">Refresh entities</string>
+    <string id="Back">Back</string>
     <!-- ERROR -->
     <string id="Error_Unknown">Unknown error</string>
-    <string id="Error_PhoneNotConnected">Phone not connected</string>
+    <string id="Error_PhoneNotConnected">Phone\nnot connected</string>
 
     <string id="Error_Request_InvalidUrl">Check settings, invalid url</string>
     <string id="Error_Request_NotFound">Resource not found</string>
@@ -17,4 +41,7 @@
 
     <string id="Error_Auth_NotReachable">Server not reachable</string>
     <string id="Error_Auth_Revoked">Login Revoked</string>
+    <string id="ErrUnknown">Unknown error</string>
+    <string id="ErrTitle">Failed</string>
+    <string id="ErrAlarmCode">Alarm code not supported</string>
 </strings>

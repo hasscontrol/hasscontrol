@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
+using Toybox.Lang;
 using Hass;
 
 
@@ -8,41 +9,38 @@ class HassControlApp extends App.AppBase {
   static const SCENES_VIEW = "scenes";
   static const ENTITIES_VIEW = "entities";
   static const STORAGE_KEY_START_VIEW = "start_view";
+    var viewController;
+    var glanceEntity;
 
-  var viewController;
-  var menu;
-
-  function initialize() {
-    AppBase.initialize();
-  }
+    function initialize() {
+        AppBase.initialize();
+    }
 
   /*
    * TODO:
-   * - Flytta all strings till xml
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
-   *
+   * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
+   * - decrease code base for client.mc and its inheritances
+   * - periodically refresh entities
+   * - use background refreshing for glance view, because some devices are doing one shot showing
+   * - create pseudo glance mode for device without glance, refresh the one entity through backgorund service
   */
 
-  function launchInitialView() {
-    var initialView = getStartView();
-
-    if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-      return viewController.pushEntityView();
+    /**
+    * Launches initial, entity list, view
+    */
+    function launchInitialView() {
+        var viewDelegate = self.viewController.getMainViewDelegate(getStartView());
+        Ui.pushView(viewDelegate[0], viewDelegate[1], Ui.SLIDE_IMMEDIATE);
+        return true;
     }
-    if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-      return viewController.pushSceneView();
+
+    function onSettingsChanged() {
+        Hass.importScenesFromSettings();
+        Hass.client.onSettingsChanged();
+        Ui.requestUpdate();
     }
-
-    return viewController.pushSceneView();
-  }
-
-  function onSettingsChanged() {
-    Hass.loadScenesFromSettings();
-    Hass.client.onSettingsChanged();
-
-    Ui.requestUpdate();
-  }
 
   function logout() {
     Hass.client.logout();
@@ -52,91 +50,69 @@ class HassControlApp extends App.AppBase {
     Hass.client.login(callback);
   }
 
-  function getStartView() {
-    var startView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
+    /**
+    * Loads stored start view from storage
+    */
+    function getStartView() {
+        var storedStartView = App.Storage.getValue(HassControlApp.STORAGE_KEY_START_VIEW);
+        var startView = HassControlApp.SCENES_VIEW;
 
-    if (startView != null && startView.equals(HassControlApp.SCENES_VIEW)) {
-      return HassControlApp.SCENES_VIEW;
-    } else if (startView != null && startView.equals(HassControlApp.ENTITIES_VIEW)) {
-      return HassControlApp.ENTITIES_VIEW;
-    }
+        if (storedStartView == null) {return startView;}
 
-    return HassControlApp.SCENES_VIEW;
-  }
-
-  function setStartView(newStartView) {
-    if (newStartView.equals(HassControlApp.ENTITIES_VIEW)) {
-      App.Storage.setValue(
-        HassControlApp.STORAGE_KEY_START_VIEW,
-        HassControlApp.ENTITIES_VIEW
-      );
-    } else if (newStartView.equals(HassControlApp.SCENES_VIEW)) {
-      App.Storage.setValue(
-        HassControlApp.STORAGE_KEY_START_VIEW,
-        HassControlApp.SCENES_VIEW
-      );
-    } else {
-      throw new InvalidValueException();
-    }
-  }
-
-  function isLoggedIn() {
-    return Hass.client.isLoggedIn();
-  }
-
-  function onStart(state) {}
-
-  function onStop(state) {}
-
-  function getGlanceView() {
-    return [
-      new AppGlance()
-    ];
-  }
-
-  // Return the initial view of your application here
-  function getInitialView() {
-    viewController = new ViewController();
-    menu = new MenuController();
-
-    Hass.initClient();
-    Hass.loadStoredEntities();
-    Hass.loadScenesFromSettings();
-
-    if (isLoggedIn()) {
-      Hass.refreshAllEntities(true);
-    }
-
-    var deviceSettings = System.getDeviceSettings();
-    var view = null;
-    var delegate = null;
-
-    if (deviceSettings has :isGlanceModeEnabled) {
-      if (deviceSettings.isGlanceModeEnabled) {
-        var initialView = getStartView();
-
-        if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-          var entityView = viewController.getEntityView();
-          view = entityView[0];
-          delegate = entityView[1];
+        if (storedStartView.equals(HassControlApp.ENTITIES_VIEW)) {
+            startView = HassControlApp.ENTITIES_VIEW;
         }
-        if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-          var sceneView = viewController.getSceneView();
-          view = sceneView[0];
-          delegate = sceneView[1];
+
+        return startView;
+    }
+
+    function isLoggedIn() {
+        return Hass.client.isLoggedIn();
+    }
+
+    function onStart(state) {
+        if (System.getDeviceSettings() has :isGlanceModeEnabled) {
+            glanceEntity = App.Storage.getValue("glance_entity");
         }
-      }
+        Hass.initClient();
     }
 
-    if (view == null || delegate == null) {
-      view = new BaseView();
-      delegate = new BaseDelegate();
+    function onStop(state) {
+        Hass.storeGroupEntities();
     }
 
+(:glance)
+    function getGlanceView() {
+        return [new AppGlance(glanceEntity)];
+    }
 
-    return [
-      view,
-      delegate
-    ];
-  }
+    /**
+    * Returns the initial full view of the widget.
+    * On devices with glance mode on jumps directly
+    * into entity list view, otherwise loads transition page.
+    */
+    function getInitialView() {
+        if (!System.getDeviceSettings().phoneConnected) {
+            return [new ErrorView(Ui.loadResource(Rez.Strings.Error_PhoneNotConnected))];
+        }
+
+        self.viewController = new ViewController();
+
+        Hass.loadGroupEntities();
+        Hass.importScenesFromSettings();
+        if (isLoggedIn()) {
+            Hass.refreshImportedEntities(true);
+        }
+
+        var view = new BaseView();
+        var delegate = new BaseDelegate();
+
+        if (System.getDeviceSettings() has :isGlanceModeEnabled && System.getDeviceSettings().isGlanceModeEnabled) {
+            var viewDelegate = self.viewController.getMainViewDelegate(getStartView());
+            view = viewDelegate[0];
+            delegate = viewDelegate[1];
+        }
+
+        return [view, delegate];
+    }
 }
