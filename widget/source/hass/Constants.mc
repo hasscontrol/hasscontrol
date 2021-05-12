@@ -13,6 +13,7 @@ module Hass {
         TYPE_SWITCH,
         TYPE_SCRIPT,
         TYPE_LOCK,
+        TYPE_BINARY_SENSOR,
         TYPE_INPUT_BOOLEAN,
         TYPE_AUTOMATION,
         TYPE_UNKNOWN
