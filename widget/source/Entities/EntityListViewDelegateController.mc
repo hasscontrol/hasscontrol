@@ -99,7 +99,8 @@ class EntityListController {
 
         switch(getCurrentEntityType()) {
             case Hass.ENTITY_TYPE_LIGHT:
-                if(getCurrentEntityAttributes()["attributes"]["supported_features"] == 0) {break;}
+                var col_mod = getCurrentEntityAttributes()["attributes"]["supported_color_modes"];
+                if (col_mod[0].equals("onoff")) {break;}
                 var deleg = new EntityTypeLightDelegate(curEntId);
                 return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_LEFT);
             case Hass.ENTITY_TYPE_ALARM_PANEL:

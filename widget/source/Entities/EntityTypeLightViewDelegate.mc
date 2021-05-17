@@ -17,12 +17,9 @@ class EntityTypeLightDelegate extends Ui.BehaviorDelegate {
         BehaviorDelegate.initialize();
         _entityId = entId;
         _pageIndex = 0;
-        _pages = [PAGE_STATE];
-        var entitAttrs = Hass.getEntityState(entId)["attributes"];
-        if (entitAttrs.hasKey(PAGE_BRIGHTNESS)) {
-            _pages.add(PAGE_BRIGHTNESS);
-        }
-        if (entitAttrs.hasKey(PAGE_COLOUR_TEMP)) {
+        _pages = [PAGE_STATE, PAGE_BRIGHTNESS];
+        var col_mods = Hass.getEntityState(entId)["attributes"]["supported_color_modes"];
+        if (col_mods.indexOf(PAGE_COLOUR_TEMP) != -1) {
             _pages.add(PAGE_COLOUR_TEMP);
         }
     }
@@ -67,7 +64,7 @@ class EntityTypeLightDelegate extends Ui.BehaviorDelegate {
                                           entitState["state"]);
         } else if (getCurrentPage() == PAGE_BRIGHTNESS) {
             pushView(new NumberPickerView(Rez.Strings.Percentage,
-                                          entitState["attributes"]["brightness"] * 100 / 255,
+                                          entitState["attributes"].hasKey("brightness") ? entitState["attributes"]["brightness"] * 100 / 255 : 0,
                                           [0, 100, 5]),
                      new NumberPickerDelegate(_entityId, "brightness_pct"), WatchUi.SLIDE_IMMEDIATE);
             return true;
@@ -105,9 +102,11 @@ class EntityTypeLightView extends Ui.View {
             Lay.drawState(dc, entityState["state"]);
             Lay.drawName(dc, Ui.loadResource(Rez.Strings.State));
         } else if(currPage == _delegate.PAGE_BRIGHTNESS) {
-            Lay.drawState(dc, entityState["attributes"]["brightness"] * 100 / 255 + " %");
+            var val = entityState["attributes"].hasKey("brightness") ? entityState["attributes"]["brightness"] * 100 / 255 : 0;
+            Lay.drawState(dc, val + " %");
             Lay.drawName(dc, Ui.loadResource(Rez.Strings.Brightness));
         } else if(currPage == _delegate.PAGE_COLOUR_TEMP) {
+            // temperature needs to be checked with real hardware, the values could be provided only if the light is on
             Lay.drawState(dc, entityState["attributes"]["color_temp"] + " " + Ui.loadResource(Rez.Strings.Mireds).toLower());
             Lay.drawName(dc, Ui.loadResource(Rez.Strings.Colour) + " " + Ui.loadResource(Rez.Strings.Temperature).toLower());
         }
