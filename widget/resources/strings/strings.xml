@@ -10,6 +10,9 @@
     <string id="Temperature">Temperature</string>
     <string id="ArmHome">Arm Home</string>
     <string id="ArmAway">Arm Away</string>
+    <string id="Open">Open</string>
+    <string id="Close">Close</string>
+    <string id="Stop">Stop</string>
     <!-- Entity List -->
     <string id="NoEntities">No entities configured</string>
     <!-- Loader Messages -->

@@ -4,6 +4,7 @@ module Hass {
     const ENTITY_TYPE_ALARM_PANEL = "alarm_control_panel";
     const ENTITY_TYPE_AUTOMATION = "automation";
     const ENTITY_TYPE_BINARY_SENSOR = "binary_sensor";
+    const ENTITY_TYPE_COVER = "cover";
     const ENTITY_TYPE_INPUT_BOOLEAN = "input_boolean";
     const ENTITY_TYPE_LIGHT= "light";
     const ENTITY_TYPE_LOCK = "lock";

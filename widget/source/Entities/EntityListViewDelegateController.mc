@@ -105,6 +105,8 @@ class EntityListController {
                 return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_LEFT);
             case Hass.ENTITY_TYPE_ALARM_PANEL:
                 return Ui.pushView(new EntityTypeAlarmPanelView(curEntId), new EntityTypeAlarmPanelDelegate(curEntId), Ui.SLIDE_LEFT);
+            case Hass.ENTITY_TYPE_COVER:
+                return Ui.pushView(new EntityTypeCoverView(curEntId), new EntityTypeCoverDelegate(curEntId), Ui.SLIDE_LEFT);
             default:
                 break;
         }

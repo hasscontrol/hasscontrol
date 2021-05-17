@@ -33,6 +33,7 @@ class ViewController {
             Hass.ENTITY_TYPE_ALARM_PANEL,
             Hass.ENTITY_TYPE_AUTOMATION,
             Hass.ENTITY_TYPE_BINARY_SENSOR,
+            Hass.ENTITY_TYPE_COVER,
             Hass.ENTITY_TYPE_INPUT_BOOLEAN,
             Hass.ENTITY_TYPE_LIGHT,
             Hass.ENTITY_TYPE_LOCK,
