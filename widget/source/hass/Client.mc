@@ -26,7 +26,7 @@ module Hass {
         hidden var _baseUrlIsValid;
 
         function initialize() {
-            refreshBaseUrl();
+            _refreshBaseUrl();
 
             OAuthClient.initialize({
                 :authUrl => _baseUrl + AUTH_ENDPOINT,
@@ -36,7 +36,7 @@ module Hass {
             });
         }
 
-        function refreshBaseUrl() {
+        function _refreshBaseUrl() {
             var newUrl = App.Properties.getValue("host");
             var chars = newUrl.toCharArray();
 
@@ -61,7 +61,7 @@ module Hass {
         }
 
         function onSettingsChanged() {
-            refreshBaseUrl();
+            _refreshBaseUrl();
 
             OAuthClient.onSettingsChanged();
 
@@ -69,7 +69,7 @@ module Hass {
             setTokenUrl(_baseUrl + TOKEN_ENDPOINT);
         }
 
-        function validateSettings(errorCallback) {
+        function _validateSettings(errorCallback) {
             var error = null;
 
             if (!System.getDeviceSettings().phoneConnected) {
@@ -87,28 +87,8 @@ module Hass {
             return error;
         }
 
-
-        function activateScene(sceneId, callback) {
-            if (validateSettings(callback) != null) {
-                return;
-            }
-
-            System.println("Send activate scene request");
-
-            makeAuthenticatedWebRequest(
-                _baseUrl + "/api/services/scene/turn_on",
-                {
-                    "entity_id" => sceneId
-                },
-                {
-                    :method => Comm.HTTP_REQUEST_METHOD_POST
-                },
-                callback
-            );
-        }
-
         function getEntity(entityId, context, callback) {
-            if (validateSettings(callback) != null) {
+            if (_validateSettings(callback) != null) {
                 return;
             }
 
@@ -131,7 +111,7 @@ module Hass {
         }
 
         function setEntityState(entityId, entityType, action, callback, extraParams) {
-            if (validateSettings(callback) != null) {
+            if (_validateSettings(callback) != null) {
                 return;
             }
 

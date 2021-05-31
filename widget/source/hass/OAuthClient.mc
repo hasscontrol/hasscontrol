@@ -10,28 +10,33 @@ module Hass {
         hidden var _tokenUrl;
         hidden var _clientId;
         hidden var _redirectUrl;
-        hidden var _credentials;
 
         hidden var _tokenCallbacks;
 
         hidden var _isLoggingIn;
         hidden var _isFetchingAccessToken;
 
+        hidden var _refreshToken;
+        hidden var _accessToken;
+        hidden var _expires;
+        hidden var _fixedAccessToken;
+
         function initialize(options) {
-            Comm.registerForOAuthMessages(method(:onReceiveCode));
+            Comm.registerForOAuthMessages(method(:_onReceiveCode));
 
             _authUrl = options[:authUrl];
             _tokenUrl = options[:tokenUrl];
             _clientId = options[:clientId];
             _redirectUrl = options[:redirectUrl];
-            _credentials = new OauthCredentials();
             _tokenCallbacks = new [0];
             _isLoggingIn = false;
             _isFetchingAccessToken = false;
+            _fixedAccessToken = false;
+            loadLongLivedToken();
         }
 
         function onSettingsChanged() {
-            _credentials.loadLongLivedToken();
+            loadLongLivedToken();
         }
 
         function setAuthUrl(newUrl) {
@@ -52,8 +57,8 @@ module Hass {
 
         function addTokenCallback(callback, context) {
             _tokenCallbacks.add({
-                "callback" => callback,
-                "context" => context
+                :callback => callback,
+                :context => context
             });
         }
 
@@ -61,11 +66,11 @@ module Hass {
             _tokenCallbacks.remove(callbackObject);
         }
 
-        function fireTokenCallbacks(error) {
+        function _fireTokenCallbacks(error) {
             for( var i = 0; i < _tokenCallbacks.size(); i++ ) {
                 var callbackObject = _tokenCallbacks[i];
 
-                callbackObject["callback"].invoke(error, callbackObject["context"]);
+                callbackObject[:callback].invoke(error, callbackObject[:context]);
 
                 removeTokenCallback(callbackObject);
             }
@@ -81,27 +86,35 @@ module Hass {
             }
         }
 
+        /**
+        * Checks if user is successfully done login process
+        * or is using long lived token
+        */
         function isLoggedIn() {
-            return _credentials.isLoggedIn();
+            if (_fixedAccessToken == true || getRefreshToken() != null) {
+                return true;
+            }
+
+            return false;
         }
 
-        function onReceiveTokens(code, data) {
+        function _onReceiveTokens(code, data) {
             _setIsLoggingIn(false);
 
             _isFetchingAccessToken = false;
 
             if (code == 200) {
-                _credentials.setExpires(data["expires_in"]);
-                _credentials.setAccessToken(data["access_token"]);
+                setAccessTokenExpiration(data["expires_in"]);
+                setAccessToken(data["access_token"]);
 
                 if (data["refresh_token"]) {
                     System.println("Saving refresh token");
-                    _credentials.setRefreshToken(data["refresh_token"]);
+                    setRefreshToken(data["refresh_token"]);
                 }
 
                 System.println("Received tokens from home assistant");
 
-                fireTokenCallbacks(null);
+                _fireTokenCallbacks(null);
             } else {
                 var error = new OAuthError(code);
 
@@ -112,7 +125,7 @@ module Hass {
                 System.println("Failed to complete token request, status " + code);
                 System.println(data);
 
-                fireTokenCallbacks(error);
+                _fireTokenCallbacks(error);
             }
         }
 
@@ -131,9 +144,9 @@ module Hass {
                 return;
             }
 
-            if (_credentials.hasExpired() == true || force == true) {
+            if (force == true || isAccessTokenExpired() == true) {
                 System.println("AccessToken has expired, lets refresh!");
-                var refreshToken = _credentials.getRefreshToken();
+                var refreshToken = getRefreshToken();
 
                 _isFetchingAccessToken = true;
                 Comm.makeWebRequest(
@@ -146,15 +159,15 @@ module Hass {
                     {
                         :method => Comm.HTTP_REQUEST_METHOD_POST
                     },
-                    method(:onReceiveTokens)
+                    method(:_onReceiveTokens)
                 );
             } else {
                 System.println("AccessToken still valid :)");
-                fireTokenCallbacks(null);
+                _fireTokenCallbacks(null);
             }
         }
 
-        function getTokensFromCode(code) {
+        function _getTokensFromCode(code) {
             if (_isFetchingAccessToken != true) {
                 _isFetchingAccessToken = true;
 
@@ -168,27 +181,30 @@ module Hass {
                     {
                         :method => Comm.HTTP_REQUEST_METHOD_POST
                     },
-                    method(:onReceiveTokens)
+                    method(:_onReceiveTokens)
                 );
             }
         }
 
-        function onReceiveCode(value) {
+        function _onReceiveCode(value) {
             if (value.data["code"] != null) {
                 System.println("Received auth code from home assistant");
-                getTokensFromCode(value.data["code"]);
+                _getTokensFromCode(value.data["code"]);
             } else {
                 var error = new OAuthError(value.responseCode);
 
                 _setIsLoggingIn(false);
 
-                fireTokenCallbacks(error);
+                _fireTokenCallbacks(error);
 
                 System.println("Failed to receive auth code!");
                 System.println(error.toString());
             }
         }
 
+        /**
+        * Login into HASS
+        */
         function login(callback) {
             if (callback != null) {
                 addTokenCallback(callback);
@@ -205,7 +221,7 @@ module Hass {
             if (!System.getDeviceSettings().phoneConnected) {
                 var error = new OAuthError(OAuthError.ERROR_PHONE_NOT_CONNECTED);
 
-                fireTokenCallbacks(error);
+                _fireTokenCallbacks(error);
 
                 return;
             }
@@ -225,19 +241,35 @@ module Hass {
             );
         }
 
+        /**
+        * Resets both tokens and revokes token in HASS
+        */
         function logout() {
-            // TODO: try to clear session in home assistant?
-            _credentials.clear();
+            if (!_fixedAccessToken) {
+                Comm.makeWebRequest(
+                    _tokenUrl,
+                    {
+                        "token" => getRefreshToken(),
+                        "action" => "revoke"
+                    },
+                    {:method => Comm.HTTP_REQUEST_METHOD_POST},
+                    null
+                );
+            }
+
+            setAccessToken(null);
+            setRefreshToken(null);
+            setAccessTokenExpiration(null);
         }
 
-        function onWebResponse(responseCode, body, context) {
+        function _onWebResponse(responseCode, body, context) {
             var error = null;
             if (responseCode < 200 || responseCode >= 300) {
                 error = new RequestError(responseCode);
 
                 if (error.code == ERROR_NOT_AUTHORIZED) {
-                    _credentials.setAccessToken(null);
-                    _credentials.setExpires(null);
+                    setAccessToken(null);
+                    setAccessTokenExpiration(null);
                 }
                 if (
                     error.code == ERROR_NOT_FOUND
@@ -248,8 +280,6 @@ module Hass {
                 }
             }
 
-//            System.println(context);
-
             context[:responseCallback].invoke(error, {
                 :responseCode => responseCode,
                 :body => body,
@@ -257,7 +287,7 @@ module Hass {
             });
         }
 
-        function doAuthenticatedWebRequest(error, context) {
+        function _doAuthenticatedWebRequest(error, context) {
             if (error != null) {
                 context[:responseCallback].invoke(error, {
                     :context => context[:context]
@@ -265,7 +295,8 @@ module Hass {
                 return;
             }
 
-            var accessToken = _credentials.getAccessToken();
+            var accessToken = _accessToken;
+            if (accessToken == null) {accessToken = Application.Storage.getValue("access_token");}
 
             var options = {
                 :method => Comm.HTTP_REQUEST_METHOD_GET,
@@ -297,12 +328,12 @@ module Hass {
                 context[:url],
                 context[:parameters],
                 options,
-                method(:onWebResponse)
+                method(:_onWebResponse)
             );
         }
 
         function makeAuthenticatedWebRequest(url, parameters, options, responseCallback) {
-            addTokenCallback(method(:doAuthenticatedWebRequest), {
+            addTokenCallback(method(:_doAuthenticatedWebRequest), {
                 :url => url,
                 :parameters => parameters,
                 :options => options,
@@ -310,6 +341,107 @@ module Hass {
             });
 
             refreshToken(false);
+        }
+
+        /**
+        * Loads long lived token from CIQ settings
+        */
+        function loadLongLivedToken() {
+            var accessToken = App.Properties.getValue("accessToken");
+            if (accessToken.length() > 0 ) {
+                _fixedAccessToken = true;
+                _accessToken = accessToken;
+            } else {
+                _fixedAccessToken = false;
+                _accessToken = null;
+            }
+        }
+
+        /**
+        * Returns refresh token used for obtaining new access token
+        * from HASS server after its expiration
+        */
+        function getRefreshToken() {
+            var refreshToken = _refreshToken;
+
+            if (refreshToken == null) {
+                refreshToken = Application.Storage.getValue("refresh_token");
+            }
+
+            return refreshToken;
+        }
+
+        /**
+        * Sets refresh token which will be used for
+        * obtaining of new access token from HASS server
+        * after its expiration
+        */
+        function setRefreshToken(token) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to set refresh token, while having long lived access token");
+                return;
+            }
+
+            _refreshToken = token;
+            Application.Storage.setValue("refresh_token", token);
+        }
+
+        /**
+        * Sets access token to running HASS server
+        */
+        function setAccessToken(token) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to overwrite long lived access token");
+                return;
+            }
+
+            _accessToken = token;
+            Application.Storage.setValue("access_token", token);
+        }
+
+        /**
+        * Sets access token expiration date
+        */
+        function setAccessTokenExpiration(expiresIn) {
+            if (_fixedAccessToken == true) {
+                System.println("Not allowed to set expires, while having long lived access token");
+                return;
+            }
+
+            if (expiresIn != null) {
+                _expires = Time.now().add(new Time.Duration(expiresIn));
+                Application.Storage.setValue("expires", _expires.value());
+            } else {
+                _expires = null;
+                Application.Storage.setValue("expires", null);
+            }
+        }
+
+        /**
+        * Checks if access token has expired and needs to be refreshed
+        */
+        function isAccessTokenExpired() {
+            // If we are using a long-lived access token we cant check if it has expired
+            if (_fixedAccessToken == true) {
+                return false;
+            }
+
+            var expires = _expires;
+            if (expires == null) {expires = Application.Storage.getValue("expires");}
+
+            if (expires == null) {
+                return true;
+            }
+
+            _expires = new Time.Moment(expires);
+
+            // add 1 minute as buffer
+            var now = Time.now().add(new Time.Duration(60));
+            if (_expires.lessThan(now)) {
+                return true;
+            }
+
+            return false;
         }
     }
 }
