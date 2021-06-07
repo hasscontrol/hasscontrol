@@ -46,8 +46,8 @@ class HassControlApp extends App.AppBase {
     Hass.client.logout();
   }
 
-  function login(callback) {
-    Hass.client.login(callback);
+  function login() {
+    Hass.client.login();
   }
 
     /**

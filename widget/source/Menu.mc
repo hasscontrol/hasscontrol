@@ -39,7 +39,7 @@ class MenuDelegate extends Ui.Menu2InputDelegate {
         }
         if (itemId == ControlMenu.MENU_LOGIN) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
-            App.getApp().login(null);
+            App.getApp().login();
             return true;
         }
         if (itemId == ControlMenu.MENU_ENTER_SETTINGS) {

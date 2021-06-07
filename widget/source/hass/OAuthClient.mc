@@ -22,7 +22,7 @@ module Hass {
         hidden var _fixedAccessToken;
 
         function initialize(options) {
-            Comm.registerForOAuthMessages(method(:_onReceiveCode));
+            Comm.registerForOAuthMessages(method(:_onReceivedAuthCode));
 
             _authUrl = options[:authUrl];
             _tokenUrl = options[:tokenUrl];
@@ -55,24 +55,13 @@ module Hass {
             _tokenUrl = newUrl;
         }
 
-        function addTokenCallback(callback, context) {
-            _tokenCallbacks.add({
-                :callback => callback,
-                :context => context
-            });
-        }
-
-        function removeTokenCallback(callbackObject) {
-            _tokenCallbacks.remove(callbackObject);
-        }
-
         function _fireTokenCallbacks(error) {
             for( var i = 0; i < _tokenCallbacks.size(); i++ ) {
                 var callbackObject = _tokenCallbacks[i];
 
                 callbackObject[:callback].invoke(error, callbackObject[:context]);
 
-                removeTokenCallback(callbackObject);
+                _tokenCallbacks.remove(callbackObject);
             }
         }
 
@@ -98,7 +87,10 @@ module Hass {
             return false;
         }
 
-        function _onReceiveTokens(code, data) {
+        /**
+        * Callback when both or only access token is returened from HASS
+        */
+        function _onReceivedTokens(code, data) {
             _setIsLoggingIn(false);
 
             _isFetchingAccessToken = false;
@@ -129,7 +121,10 @@ module Hass {
             }
         }
 
-        function refreshToken(force) {
+        /**
+        * Request access token using refresh token
+        */
+        function refreshAccessToken() {
             if (_isLoggingIn) {
                 return;
             }
@@ -144,7 +139,7 @@ module Hass {
                 return;
             }
 
-            if (force == true || isAccessTokenExpired() == true) {
+            if (isAccessTokenExpired() == true) {
                 System.println("AccessToken has expired, lets refresh!");
                 var refreshToken = getRefreshToken();
 
@@ -153,13 +148,13 @@ module Hass {
                     _tokenUrl,
                     {
                         "grant_type" => "refresh_token",
-                        "client_id" => _clientId,
-                        "refresh_token" => refreshToken
+                        "refresh_token" => refreshToken,
+                        "client_id" => _clientId
                     },
                     {
                         :method => Comm.HTTP_REQUEST_METHOD_POST
                     },
-                    method(:_onReceiveTokens)
+                    method(:_onReceivedTokens)
                 );
             } else {
                 System.println("AccessToken still valid :)");
@@ -167,7 +162,10 @@ module Hass {
             }
         }
 
-        function _getTokensFromCode(code) {
+        /**
+        * Request access and refresh tokens from HASS using authorization code
+        */
+        function _getTokensUsingCode(code) {
             if (_isFetchingAccessToken != true) {
                 _isFetchingAccessToken = true;
 
@@ -175,21 +173,25 @@ module Hass {
                     _tokenUrl,
                     {
                         "grant_type" => "authorization_code",
-                        "client_id" => _clientId,
-                        "code" => code
+                        "code" => code,
+                        "client_id" => _clientId
+
                     },
                     {
                         :method => Comm.HTTP_REQUEST_METHOD_POST
                     },
-                    method(:_onReceiveTokens)
+                    method(:_onReceivedTokens)
                 );
             }
         }
 
-        function _onReceiveCode(value) {
+        /**
+        * Callback when OAuth response from HASS is received
+        */
+        function _onReceivedAuthCode(value) {
             if (value.data["code"] != null) {
                 System.println("Received auth code from home assistant");
-                _getTokensFromCode(value.data["code"]);
+                _getTokensUsingCode(value.data["code"]);
             } else {
                 var error = new OAuthError(value.responseCode);
 
@@ -205,14 +207,10 @@ module Hass {
         /**
         * Login into HASS
         */
-        function login(callback) {
-            if (callback != null) {
-                addTokenCallback(callback);
-            }
-
+        function login() {
             if (isLoggedIn() == true) {
                 System.println("Trying to login when we are already logged in");
-                refreshToken(false);
+                refreshAccessToken();
                 return;
             }
 
@@ -228,11 +226,9 @@ module Hass {
 
             System.println("About to fire an oauth request!");
             Comm.makeOAuthRequest(
-            _authUrl,
+                _authUrl,
                 {
                     "client_id" => _clientId,
-                    "response_type"=>"code",
-                    "scope"=>"public",
                     "redirect_uri"=> _redirectUrl
                 },
                 _redirectUrl,
@@ -242,10 +238,10 @@ module Hass {
         }
 
         /**
-        * Resets both tokens and revokes token in HASS
+        * Resets both tokens and revokes the refresh token in HASS
         */
         function logout() {
-            if (!_fixedAccessToken) {
+            if (_fixedAccessToken == false) {
                 Comm.makeWebRequest(
                     _tokenUrl,
                     {
@@ -332,15 +328,21 @@ module Hass {
             );
         }
 
+        /**
+        * Executes single request to HASS with valid authentication params
+        */
         function makeAuthenticatedWebRequest(url, parameters, options, responseCallback) {
-            addTokenCallback(method(:_doAuthenticatedWebRequest), {
-                :url => url,
-                :parameters => parameters,
-                :options => options,
-                :responseCallback => responseCallback,
+            _tokenCallbacks.add({
+                :callback => method(:_doAuthenticatedWebRequest),
+                :context => {
+                    :url => url,
+                    :parameters => parameters,
+                    :options => options,
+                    :responseCallback => responseCallback
+                }
             });
 
-            refreshToken(false);
+            refreshAccessToken();
         }
 
         /**
@@ -427,13 +429,16 @@ module Hass {
             }
 
             var expires = _expires;
-            if (expires == null) {expires = Application.Storage.getValue("expires");}
+            if (expires == null) {
+                expires = Application.Storage.getValue("expires");
+                if (expires != null) {
+                    _expires = new Time.Moment(expires);
+                }
+            }
 
             if (expires == null) {
                 return true;
             }
-
-            _expires = new Time.Moment(expires);
 
             // add 1 minute as buffer
             var now = Time.now().add(new Time.Duration(60));
