@@ -112,7 +112,7 @@ class HassControlApp extends App.AppBase {
     if (deviceSettings has :isGlanceModeEnabled) {
       if (deviceSettings.isGlanceModeEnabled) {
       	var view = null;
-	    var delegate = null;
+	      var delegate = null;
         var initialView = getStartView();
 
         if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
@@ -127,14 +127,14 @@ class HassControlApp extends App.AppBase {
         }
         
         if (view == null || delegate == null) {
-	      view = new BaseView();
-	      delegate = new BaseDelegate();
-	    }
+          view = new BaseView();
+          delegate = new BaseDelegate();
+        }
 	  
-	    return [
-	      view,
-	      delegate
-	    ];
+        return [
+          view,
+          delegate
+        ];
       }
     }
     
