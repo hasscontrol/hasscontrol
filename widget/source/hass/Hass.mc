@@ -26,8 +26,20 @@ module Hass {
     var _entityToRefreshCounter = 0;
     var _entitiesRefreshingSilent = false;
 
+    /**
+    * Initialize HTTP Client
+    */
     function initClient() {
         client = new Client();
+    }
+
+    /**
+    * Resets loaded entities and logout from HASS server
+    */
+    function logout() {
+        _entities = [];
+        _entitiesStates = {};
+        client.logout();
     }
 
     /**

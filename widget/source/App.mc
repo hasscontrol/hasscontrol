@@ -21,7 +21,6 @@ class HassControlApp extends App.AppBase {
    * - Skapa en custom meny som man kan rendera om
    * - Ta kontroll äver view hanteringen för att bli av med blinkande views
    * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
-   * - decrease code base for client.mc and its inheritances
    * - periodically refresh entities
    * - use background refreshing for glance view, because some devices are doing one shot showing
    * - create pseudo glance mode for device without glance, refresh the one entity through backgorund service
@@ -42,13 +41,17 @@ class HassControlApp extends App.AppBase {
         Ui.requestUpdate();
     }
 
-  function logout() {
-    Hass.client.logout();
-  }
+    function isLoggedIn() {
+        return Hass.client.isLoggedIn();
+    }
 
-  function login() {
-    Hass.client.login();
-  }
+    function logout() {
+        Hass.logout();
+    }
+
+    function login() {
+        Hass.client.login();
+    }
 
     /**
     * Loads stored start view from storage
@@ -64,10 +67,6 @@ class HassControlApp extends App.AppBase {
         }
 
         return startView;
-    }
-
-    function isLoggedIn() {
-        return Hass.client.isLoggedIn();
     }
 
     function onStart(state) {
