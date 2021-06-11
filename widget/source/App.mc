@@ -108,11 +108,11 @@ class HassControlApp extends App.AppBase {
     }
 
     var deviceSettings = System.getDeviceSettings();
-    var view = null;
-    var delegate = null;
-
+    
     if (deviceSettings has :isGlanceModeEnabled) {
       if (deviceSettings.isGlanceModeEnabled) {
+      	var view = null;
+	    var delegate = null;
         var initialView = getStartView();
 
         if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
@@ -125,18 +125,20 @@ class HassControlApp extends App.AppBase {
           view = sceneView[0];
           delegate = sceneView[1];
         }
+        
+        if (view == null || delegate == null) {
+	      view = new BaseView();
+	      delegate = new BaseDelegate();
+	    }
+	  
+	    return [
+	      view,
+	      delegate
+	    ];
       }
     }
-
-    if (view == null || delegate == null) {
-      view = new BaseView();
-      delegate = new BaseDelegate();
-    }
-
-
-    return [
-      view,
-      delegate
-    ];
+    
+    launchInitialView();
+    return viewController.getSceneView();
   }
 }
