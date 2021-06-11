@@ -19,7 +19,7 @@ class EntityTypeCoverDelegate extends Ui.BehaviorDelegate {
         var entitState = Hass.getEntityState(_entityId);
         var openCloseMenu = new Ui.Menu();
 
-        openCloseMenu.setTitle(entitState["attributes"]["friendly_name"]);
+        openCloseMenu.setTitle(entitState["friendly_name"]);
         if (entitState["state"].equals("opening") || entitState["state"].equals("open")) {
             openCloseMenu.addItem(Ui.loadResource(Rez.Strings.Close), :close);
         } else {  //closing, closed

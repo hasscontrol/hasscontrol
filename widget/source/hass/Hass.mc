@@ -69,6 +69,21 @@ module Hass {
     }
 
     /**
+    * Filters unwated attributes by writing only defined attributes
+    * from attributes dictionary into target dictionary
+    */
+    function _extractFilteredAttributes(targetDict, attrsDict) {
+        var supportedAttributes = ["friendly_name", "supported_color_modes", "brightness", "color_temp", "min_mireds",
+                                   "max_mireds", "unit_of_measurement", "code_arm_required", "code_format"];
+        var attrsDictKeys = attrsDict.keys();
+        for (var i = 0; i < attrsDictKeys.size(); i++) {
+            if (supportedAttributes.indexOf(attrsDictKeys[i]) != -1) {
+                targetDict.put(attrsDictKeys[i], attrsDict.get(attrsDictKeys[i]));
+            }
+        }
+    }
+
+    /**
     * Helper callback method used for extracting data from single
     * entity response.
     */
@@ -84,9 +99,8 @@ module Hass {
             return;
         }
 
-        var entityDict = {"state" => data[:body]["state"],
-                          "attributes" => data[:body]["attributes"],
-                          "last_changed" => data[:body]["last_changed"]};
+        var entityDict = {"state" => data[:body]["state"]};
+        _extractFilteredAttributes(entityDict, data[:body]["attributes"]);
         _entitiesStates.put(data[:body]["entity_id"], entityDict);
     }
 
@@ -229,8 +243,8 @@ module Hass {
             var entityId = changedStates[i]["entity_id"];
             if (_entitiesStates.hasKey(entityId)) {
                 _entitiesStates[entityId]["state"] = changedStates[i]["state"];
-                _entitiesStates[entityId]["attributes"] = changedStates[i]["attributes"];
-                _entitiesStates[entityId]["last_changed"] = changedStates[i]["last_changed"];
+                _extractFilteredAttributes(_entitiesStates[entityId], changedStates[i]["attributes"]);
+//                _entitiesStates[entityId]["attributes"] = changedStates[i]["attributes"];  //TODO UNROLL AND FILTER THIS
             }
         }
 
@@ -344,7 +358,7 @@ module Hass {
 
             _entities.add(extractedScene);
             _entitiesStates.put(extractedScene,
-                              {"attributes" => {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName)},
+                              {"friendly_name" => (extractedSceneName == null ? extractedScene : extractedSceneName),
                                "state" => "scening"});
         } while (run);
     }

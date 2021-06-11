@@ -99,7 +99,7 @@ class EntityListController {
 
         switch(getCurrentEntityType()) {
             case Hass.ENTITY_TYPE_LIGHT:
-                var col_mod = getCurrentEntityAttributes()["attributes"]["supported_color_modes"];
+                var col_mod = getCurrentEntityAttributes()["supported_color_modes"];
                 if (col_mod[0].equals("onoff")) {break;}
                 var deleg = new EntityTypeLightDelegate(curEntId);
                 return Ui.pushView(new EntityTypeLightView(deleg), deleg, Ui.SLIDE_LEFT);
@@ -218,11 +218,11 @@ class EntityListView extends Ui.View {
         }
 
         if (entityType.equals("sensor")) {
-            Lay.drawState(dc, entity["state"] + " " + entity["attributes"]["unit_of_measurement"]);
+            Lay.drawState(dc, entity["state"] + " " + entity["unit_of_measurement"]);
         } else {
             drawEntityIcon(dc, entity["state"], entityType);
         }
-        Lay.drawName(dc, entity["attributes"]["friendly_name"]);
+        Lay.drawName(dc, entity["friendly_name"]);
         Lay.drawScrollBarIfNeeded(dc, _mController.getCount(), _mController.getIndex());
     }
 }

@@ -18,17 +18,17 @@ class EntityTypeAlarmPanelDelegate extends Ui.BehaviorDelegate {
     function onSelect() {
         var entitState = Hass.getEntityState(_entityId);
         if (entitState["state"].equals("disarmed")) {
-            if (entitState["attributes"]["code_arm_required"] && entitState["attributes"]["code_format"] != null) {
+            if (entitState["code_arm_required"] && entitState["code_format"] != null) {
                 App.getApp().viewController.showError(Ui.loadResource(Rez.Strings.ErrAlarmCode));
                 return false;
             }
             var arm_menu = new Ui.Menu();
-            arm_menu.setTitle(entitState["attributes"]["friendly_name"]);
+            arm_menu.setTitle(entitState["friendly_name"]);
             arm_menu.addItem(Ui.loadResource(Rez.Strings.ArmAway), :away);
             arm_menu.addItem(Ui.loadResource(Rez.Strings.ArmHome), :home);
             WatchUi.pushView(arm_menu, new ArmMenuDelegate(_entityId), WatchUi.SLIDE_IMMEDIATE);
         } else { // includes following states: armed_xyz, pending, triggered, arming
-            if (entitState["attributes"]["code_format"] != null) {
+            if (entitState["code_format"] != null) {
                 App.getApp().viewController.showError(Ui.loadResource(Rez.Strings.ErrAlarmCode));
                 return false;
             }
