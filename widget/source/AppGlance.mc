@@ -1,54 +1,15 @@
 using Toybox.WatchUi as Ui;
-using Toybox.Timer;
-using Hass;
-
-/**
-* Semi working example, less than proof of concept
-* Known bugs:
-* - sometimes occures Illegal Access (Out of Bounds) on onWebResponse(),
-*   because too much memory is used, code has to be cut down
-*   especially Client.mc and its parents. When this happend in simulator
-*   select File->Reset All App Data
-* - currently it will work only on devices with enough ram like PRO versions,
-*   other devices only loads glance view and immediatelly stops the app,
-*   that means request cannot be done. solution = used background service
-*/
 
 (:glance)
 class AppGlance extends Ui.GlanceView {
-    var _glanceEntity;
-    var _timer;
-
     function initialize(glEn) {
         GlanceView.initialize();
-        _glanceEntity = glEn;
-    }
-
-    function onHide() {
-        if (_timer) {_timer.stop();}
-    }
-
-    function onShow() {
-        if (_glanceEntity) {
-            _timer = new Timer.Timer();
-            _timer.start(method(:onTimerDone), 30000, true);
-            onTimerDone();
-        }
-    }
-
-    function onTimerDone() {
-        Hass.refreshSingleEntity(_glanceEntity);
     }
 
     function onUpdate(dc) {
         var height = dc.getHeight();
         var font = Graphics.FONT_MEDIUM;
         var text = "HassControl";
-
-        if (_glanceEntity) {
-            var entityState = Hass.getEntityState(_glanceEntity);
-            if (entityState != null && entityState.hasKey("state")) {text = entityState["state"];}
-        }
 
         var textHeight = dc.getTextDimensions(text, font)[1];
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);

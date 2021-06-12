@@ -4,27 +4,16 @@ using Toybox.WatchUi as Ui;
 using Toybox.Lang;
 using Hass;
 
-
 class HassControlApp extends App.AppBase {
-  static const SCENES_VIEW = "scenes";
-  static const ENTITIES_VIEW = "entities";
-  static const STORAGE_KEY_START_VIEW = "start_view";
+    static const SCENES_VIEW = "scenes";
+    static const ENTITIES_VIEW = "entities";
+    static const STORAGE_KEY_START_VIEW = "start_view";
     var viewController;
     var glanceEntity;
 
     function initialize() {
         AppBase.initialize();
     }
-
-  /*
-   * TODO:
-   * - Skapa en custom meny som man kan rendera om
-   * - Ta kontroll äver view hanteringen för att bli av med blinkande views
-   * - try to reduce memory by substituing entity state dictionary with symbols and filtering ignoring some params
-   * - periodically refresh entities
-   * - use background refreshing for glance view, because some devices are doing one shot showing
-   * - create pseudo glance mode for device without glance, refresh the one entity through backgorund service
-  */
 
     /**
     * Launches initial, entity list, view

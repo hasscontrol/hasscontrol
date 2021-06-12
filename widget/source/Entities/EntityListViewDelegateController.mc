@@ -149,6 +149,7 @@ class EntityListView extends Ui.View {
     hidden var _mTimerScrollBar;
     hidden var _mTimerScrollBarActive;
     hidden var _mShowScrollBar;
+    hidden var _mRefreshTimer;
 
     function initialize(controller) {
         View.initialize();
@@ -157,10 +158,20 @@ class EntityListView extends Ui.View {
         _mTimerScrollBar = new Timer.Timer();
         _mTimerScrollBarActive = false;
         _mShowScrollBar = false;
+        _mRefreshTimer = new Timer.Timer();
+    }
+
+    function refreshState() {
+        Hass.refreshSingleEntity(_mController.getCurrentEntityId());
     }
 
     function onShow() {
         _mController.refreshEntities();
+        _mRefreshTimer.start(method(:refreshState), 5000, true);
+    }
+
+    function onHide() {
+        _mRefreshTimer.stop();
     }
 
     /**
