@@ -37,6 +37,19 @@ class HassControlApp extends App.AppBase {
     return viewController.pushSceneView();
   }
 
+    function getInitialView() {
+    var initialView = getStartView();
+
+    if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
+      return viewController.getEntityView();
+    }
+    if (initialView.equals(HassControlApp.SCENES_VIEW)) {
+      return viewController.getSceneView();
+    }
+
+    return viewController.getSceneView();
+  }
+
   function onSettingsChanged() {
     Hass.loadScenesFromSettings();
     Hass.client.onSettingsChanged();
@@ -138,6 +151,6 @@ class HassControlApp extends App.AppBase {
       }
     }
     
-    return launchInitialView();
+    return getInitialView();
   }
 }
