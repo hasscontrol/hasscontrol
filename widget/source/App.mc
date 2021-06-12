@@ -138,7 +138,6 @@ class HassControlApp extends App.AppBase {
       }
     }
     
-    launchInitialView();
-    return viewController.getSceneView();
+    return launchInitialView();
   }
 }
