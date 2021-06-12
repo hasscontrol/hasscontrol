@@ -2,29 +2,18 @@ using Toybox.WatchUi as Ui;
 using Toybox.Application as App;
 
 class BaseView extends Ui.View {
-    hidden var _firstLoad;
-
-    function initialize() {
-        View.initialize();
-        _firstLoad = true;
-    }
-
-    function onShow() {
-    }
 
     // Load your resources here
-    function onLayout(dc) {
-        var scene = new WatchUi.Text({
-            :text => "HassControl",
+    function onLayout(dc) {        
+        var text = new WatchUi.Text({
+            :text => "Hass Control\nTouch to continue.",
             :color => Graphics.COLOR_WHITE,
-            :font => Graphics.FONT_LARGE,
+            :font => Graphics.FONT_SMALL,
             :locX => WatchUi.LAYOUT_HALIGN_CENTER,
             :locY => WatchUi.LAYOUT_VALIGN_CENTER
         });
-        setLayout([scene]);
-    }
-
-    function onUpdate(dc) {
-        View.onUpdate(dc);
+        setLayout([text]);
+        
+        App.getApp().launchInitialView();
     }
 }

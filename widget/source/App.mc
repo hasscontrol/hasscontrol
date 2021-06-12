@@ -37,19 +37,6 @@ class HassControlApp extends App.AppBase {
     return viewController.pushSceneView();
   }
 
-    function getInitialView() {
-    var initialView = getStartView();
-
-    if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-      return viewController.getEntityView();
-    }
-    if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-      return viewController.getSceneView();
-    }
-
-    return viewController.getSceneView();
-  }
-
   function onSettingsChanged() {
     Hass.loadScenesFromSettings();
     Hass.client.onSettingsChanged();
@@ -121,11 +108,11 @@ class HassControlApp extends App.AppBase {
     }
 
     var deviceSettings = System.getDeviceSettings();
+    var view = null;
+    var delegate = null;
     
     if (deviceSettings has :isGlanceModeEnabled) {
       if (deviceSettings.isGlanceModeEnabled) {
-      	var view = null;
-	      var delegate = null;
         var initialView = getStartView();
 
         if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
@@ -137,20 +124,18 @@ class HassControlApp extends App.AppBase {
           var sceneView = viewController.getSceneView();
           view = sceneView[0];
           delegate = sceneView[1];
-        }
-        
-        if (view == null || delegate == null) {
-          view = new BaseView();
-          delegate = new BaseDelegate();
-        }
-	  
-        return [
-          view,
-          delegate
-        ];
+        }      
       }
     }
     
-    return getInitialView();
+    if (view == null || delegate == null) {
+      view = new BaseView();
+      delegate = new BaseDelegate();
+    }
+
+    return return [
+      view,
+      delegate
+    ];
   }
 }
