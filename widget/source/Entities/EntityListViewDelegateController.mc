@@ -52,6 +52,7 @@ class EntityListController {
     * Returns current entity id
     */
     function getCurrentEntityId() {
+        if (getCount() == 0) {return null;}
         return _mEntities[_mIndex];
     }
 
@@ -162,6 +163,7 @@ class EntityListView extends Ui.View {
     }
 
     function refreshState() {
+        if (_mController.getCurrentEntityId() == null) {return null;}
         Hass.refreshSingleEntity(_mController.getCurrentEntityId());
     }
 
