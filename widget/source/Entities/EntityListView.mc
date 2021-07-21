@@ -72,7 +72,13 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
 
   function onSelect() {
     var entity = _mController.getCurrentEntity();
-    _mController.toggleEntity(entity);
+
+    if (entity != null) {
+      _mController.toggleEntity(entity);
+    } else {
+      App.getApp().menu.showRootMenu();
+      App.getApp().viewController.showError("No entity to toggle,\nplease refresh group\nfrom settings");
+    }
 
     return true;
   }
