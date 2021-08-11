@@ -314,6 +314,14 @@ module Hass {
         action = Client.ENTITY_ACTION_UNLOCK;
         loadingText = "Unlocking";
       }
+    } else if (entity.getType() == Entity.TYPE_COVER) {
+      if (currentState == Entity.STATE_OPEN) {
+        action = Client.ENTITY_ACTION_CLOSE_COVER;
+        loadingText = "Closing";
+      } else if (currentState == Entity.STATE_CLOSED) {
+        action = Client.ENTITY_ACTION_OPEN_COVER;
+        loadingText = "Opening";
+      }
     } else {
       if (currentState == Entity.STATE_ON) {
         action = Client.ENTITY_ACTION_TURN_OFF;
@@ -337,6 +345,8 @@ module Hass {
       entityType = "script";
     } else if (entity.getType() == Entity.TYPE_LOCK) {
       entityType = "lock";
+    } else if (entity.getType() == Entity.TYPE_COVER) {
+      entityType = "cover";
     } else if (entity.getType() == Entity.TYPE_INPUT_BOOLEAN) {
       entityType = "input_boolean";
     }

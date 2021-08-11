@@ -12,6 +12,8 @@
         <bitmap id="AutomationOff" filename="automation_off.png" />
         <bitmap id="LockLocked" filename="lock_locked.png" />
         <bitmap id="LockUnlocked" filename="lock_unlocked.png" />
+        <bitmap id="CoverClosed" filename="cover_closed.png" />
+        <bitmap id="CoverOpen" filename="cover_open.png" />
         <bitmap id="BinaryOn" filename="binary_on.png" />
         <bitmap id="BinaryOff" filename="binary_off.png" />
         <bitmap id="ScriptOff" filename="script_off.png" />

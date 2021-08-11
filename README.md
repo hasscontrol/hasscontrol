@@ -39,6 +39,7 @@ binary_sensor | Only displays basic boolean state, device class is not supported
 input_boolean | Toggling of its state is supported.
 light | Only turning on/off is supported, the rest like colour, brightness, etc. are not supported.
 lock | Both locking and unlocking are supported.
+cover | Both closing and opening the cover is supported.
 switch | Only turning on/off, energy consumption and standby mode are not supported.
 automation* | Can be turned on/off.
 scene* | Execution
