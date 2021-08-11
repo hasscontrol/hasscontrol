@@ -61,7 +61,7 @@ class HassControlApp extends App.AppBase {
       return HassControlApp.ENTITIES_VIEW;
     }
 
-    return HassControlApp.SCENES_VIEW;
+    return HassControlApp.ENTITIES_VIEW;
   }
 
   function setStartView(newStartView) {

@@ -26,6 +26,12 @@ module Hass {
       if (HASS_STATE_UNLOCKED.equals(stateInText)) {
         return STATE_UNLOCKED;
       }
+      if (HASS_STATE_OPEN.equals(stateInText)) {
+        return STATE_OPEN;
+      }
+      if (HASS_STATE_CLOSED.equals(stateInText)) {
+        return STATE_CLOSED;
+      }
 
       return STATE_UNKNOWN;
     }
@@ -36,6 +42,12 @@ module Hass {
       }
       if (state == STATE_OFF) {
         return HASS_STATE_OFF;
+      }
+      if (state == STATE_OPEN) {
+        return HASS_STATE_OPEN;
+      }
+      if (state == STATE_CLOSED) {
+        return HASS_STATE_CLOSED;
       }
       if (state == STATE_LOCKED) {
         return HASS_STATE_LOCKED;
@@ -75,6 +87,8 @@ module Hass {
         _mType = TYPE_SCRIPT;
       } else if (_mId.find("lock.") != null) {
         _mType = TYPE_LOCK;
+      } else if (_mId.find("cover.") != null) {
+        _mType = TYPE_COVER;
       } else if (_mId.find("binary_sensor.") != null) {
         _mType = TYPE_BINARY_SENSOR;
       } else if (_mId.find("input_boolean.") != null) {
@@ -112,6 +126,8 @@ module Hass {
         && newState != STATE_OFF
         && newState != STATE_LOCKED
         && newState != STATE_UNLOCKED
+        && newState != STATE_CLOSED
+        && newState != STATE_OPEN
         && newState != STATE_UNKNOWN
       ) {
         throw new InvalidValueException("state must be a valid Entity state");
