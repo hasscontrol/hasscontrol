@@ -89,6 +89,8 @@ module Hass {
         _mType = TYPE_LOCK;
       } else if (_mId.find("cover.") != null) {
         _mType = TYPE_COVER;
+      } else if (_mId.find("fan.") != null) {
+        _mType = TYPE_FAN;
       } else if (_mId.find("binary_sensor.") != null) {
         _mType = TYPE_BINARY_SENSOR;
       } else if (_mId.find("input_boolean.") != null) {

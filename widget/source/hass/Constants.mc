@@ -16,6 +16,7 @@ module Hass {
         TYPE_SCRIPT,
         TYPE_LOCK,
         TYPE_COVER,
+        TYPE_FAN,
         TYPE_BINARY_SENSOR,
         TYPE_INPUT_BOOLEAN,
         TYPE_AUTOMATION,

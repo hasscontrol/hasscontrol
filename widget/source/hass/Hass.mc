@@ -347,6 +347,8 @@ module Hass {
       entityType = "lock";
     } else if (entity.getType() == Entity.TYPE_COVER) {
       entityType = "cover";
+    } else if (entity.getType() == Entity.TYPE_FAN) {
+      entityType = "fan";
     } else if (entity.getType() == Entity.TYPE_INPUT_BOOLEAN) {
       entityType = "input_boolean";
     }
