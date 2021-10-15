@@ -138,6 +138,12 @@ class EntityListView extends Ui.View {
     setLayout([]);
   }
 
+  function onShow() {
+    if (App.Properties.getValue("refresh")) {
+      Hass.refreshAllEntities(true);
+    }
+  }
+
   function drawNoEntityText(dc) {
     var vh = dc.getHeight();
     var vw = dc.getWidth();
