@@ -1,6 +1,7 @@
 <resources>
     <properties>
         <property id="host" type="string">https://hassio.url</property>
+        <!-- <property id="port" type="number">443</property> -->
         <property id="accessToken" type="string"></property>
         <property id="scenes" type="string"></property>
         <property id="group" type="string"></property>
@@ -8,6 +9,7 @@
 
     <strings>
        <string id="host_title">Host: (https://hassio.url)</string>
+       <!-- <string id="port_title">Port: (443 is default for https)</string> -->
        <string id="access_token">Long-lived access token (optional)</string>
        <string id="scenes_title">Scenes: (scene1,scene2,scene3)</string>
        <string id="group_title">Group: (Group used for importing entities)</string>
@@ -15,8 +17,11 @@
 
     <settings>
         <setting propertyKey="@Properties.host" title="@Strings.host_title">
-            <settingConfig type="url" />
+            <settingConfig type="alphaNumeric" />
         </setting>
+        <!-- <setting propertyKey="@Properties.port" title="@Strings.port_title">
+            <settingConfig min="1" max="65535" type="numeric" />
+        </setting> -->
         <setting propertyKey="@Properties.accessToken" title="@Strings.access_token">
             <settingConfig type="alphaNumeric" />
         </setting>

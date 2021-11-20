@@ -154,6 +154,9 @@ module Hass {
             if (_isFetchingAccessToken != true) {
                 _isFetchingAccessToken = true;
 
+                System.println("Fetching token from code");
+                System.println(_tokenUrl);
+
                 Comm.makeWebRequest(
                     _tokenUrl,
                     {
@@ -187,7 +190,7 @@ module Hass {
 
         function login(callback) {
             if (callback != null) {
-                addTokenCallback(callback);
+                addTokenCallback(callback, {});
             }
 
             if (isLoggedIn() == true) {

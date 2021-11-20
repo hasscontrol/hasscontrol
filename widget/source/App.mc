@@ -48,7 +48,20 @@ class HassControlApp extends App.AppBase {
     Hass.client.logout();
   }
 
-  function login(callback) {
+  function onLoggedIn(error, data) {
+    if (error != null) {
+      viewController.showError(error);
+    }
+  }
+
+  function login() {
+    var callback = method(:onLoggedIn);
+
+    // TODO: should move validation into client
+    if (Hass.client.validateSettings(callback) != null) {
+        return;
+    }
+
     Hass.client.login(callback);
   }
 
