@@ -68,6 +68,8 @@ class EntityListDelegate extends Ui.BehaviorDelegate {
 
   function onMenu() {
     App.getApp().menu.showRootMenu();
+
+    return true;
   }
 
   function onSelect() {
