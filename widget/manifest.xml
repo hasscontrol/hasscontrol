@@ -2,6 +2,7 @@
     <iq:application entry="HassControlApp" id="9f38ef3a14984622ace86e7a748f4d6a" launcherIcon="@Drawables.LauncherIcon" minSdkVersion="3.1.0" name="@Strings.AppName" type="widget" version="1.5.3">
         <iq:products>
             <iq:product id="d2deltas"/>
+            <iq:product id="descentmk2"/>
             <iq:product id="fenix5"/>
             <iq:product id="fenix5plus"/>
             <iq:product id="fenix5s"/>
