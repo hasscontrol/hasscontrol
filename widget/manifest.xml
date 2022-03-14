@@ -3,6 +3,8 @@
         <iq:products>
             <iq:product id="d2deltas"/>
             <iq:product id="descentmk2"/>
+            <iq:product id="descentmk2s"/>
+            <iq:product id="epix2"/>
             <iq:product id="fenix5"/>
             <iq:product id="fenix5plus"/>
             <iq:product id="fenix5s"/>
@@ -14,6 +16,9 @@
             <iq:product id="fenix6s"/>
             <iq:product id="fenix6spro"/>
             <iq:product id="fenix6xpro"/>
+            <iq:product id="fenix7"/>
+            <iq:product id="fenix7s"/>
+            <iq:product id="fenix7x"/>
             <iq:product id="fr245"/>
             <iq:product id="fr245m"/>
             <iq:product id="fr55"/>
