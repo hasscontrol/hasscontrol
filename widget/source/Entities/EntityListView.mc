@@ -138,6 +138,12 @@ class EntityListView extends Ui.View {
     setLayout([]);
   }
 
+  function onShow() {
+    if (App.Properties.getValue("refresh")) {
+      Hass.refreshAllEntities(true);
+    }
+  }
+
   function drawNoEntityText(dc) {
     var vh = dc.getHeight();
     var vw = dc.getWidth();
@@ -248,6 +254,10 @@ class EntityListView extends Ui.View {
       drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
     } else if (type == Hass.TYPE_SCENE) {
       drawable = WatchUi.loadResource(Rez.Drawables.Scene);
+    } else if (type == Hass.TYPE_INPUT_BUTTON) {
+      drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
+    } else if (type == Hass.TYPE_BUTTON) {
+      drawable = WatchUi.loadResource(Rez.Drawables.ScriptOff);
     }
 
     if (drawable == null) {

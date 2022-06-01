@@ -5,6 +5,7 @@
         <property id="accessToken" type="string"></property>
         <property id="scenes" type="string"></property>
         <property id="group" type="string"></property>
+        <property id="refresh" type="boolean"></property>
     </properties>
 
     <strings>
@@ -13,6 +14,7 @@
        <string id="access_token">Long-lived access token (optional)</string>
        <string id="scenes_title">Scenes: (scene1,scene2,scene3)</string>
        <string id="group_title">Group: (Group used for importing entities)</string>
+       <string id="refresh_title">Refresh on show (uses more battery and network)</string>
     </strings>
 
     <settings>
@@ -30,6 +32,9 @@
         </setting>
         <setting propertyKey="@Properties.group" title="@Strings.group_title">
             <settingConfig type="alphaNumeric" />
+        </setting>
+        <setting propertyKey="@Properties.refresh" title="@Strings.refresh_title">
+            <settingConfig type="boolean" />
         </setting>
     </settings>
 </resources>
