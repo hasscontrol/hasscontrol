@@ -39,6 +39,7 @@
             <iq:product id="vivoactive3mlte"/>
             <iq:product id="vivoactive4"/>
             <iq:product id="vivoactive4s"/>
+            <iq:product id="descentg1"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="Communications"/>
