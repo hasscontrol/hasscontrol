@@ -19,9 +19,9 @@ module Hass {
   function getGroup() {
     var group = App.Properties.getValue("group");
 
-    if (group.find("group.") == null) {
-      group = "group." + group;
-    }
+    // if (group.find("group.") == null) {
+    //   group = "group." + group;
+    // }
 
     return group;
   }
@@ -254,7 +254,7 @@ module Hass {
   function importEntities() {
     var group = getGroup();
 
-    if (group == null || group.find("group.") == null) {
+    if (group == null) {
       App.getApp().viewController.showError(group + "\nis not a valid\ngroup");
       return;
     }
