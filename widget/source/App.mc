@@ -128,16 +128,19 @@ class HassControlApp extends App.AppBase {
       if (deviceSettings.isGlanceModeEnabled) {
         var initialView = getStartView();
 
-        if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
-          var entityView = viewController.getEntityView();
-          view = entityView[0];
-          delegate = entityView[1];
-        }
-        if (initialView.equals(HassControlApp.SCENES_VIEW)) {
-          var sceneView = viewController.getSceneView();
-          view = sceneView[0];
-          delegate = sceneView[1];
-        }
+        // if (initialView.equals(HassControlApp.ENTITIES_VIEW)) {
+        //   var entityView = viewController.getEntityView();
+        //   view = entityView[0];
+        //   delegate = entityView[1];
+        // }
+        // if (initialView.equals(HassControlApp.SCENES_VIEW)) {
+        //   var sceneView = viewController.getSceneView();
+        //   view = sceneView[0];
+        //   delegate = sceneView[1];
+        // }
+        var entitySceneView = viewController.getEntitySceneView();
+        view = entitySceneView[0];
+        delegate = entitySceneView[1];
       }
     }
 
