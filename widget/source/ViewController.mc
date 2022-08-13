@@ -120,6 +120,16 @@ var controller = new EntityListController(
     );
   }
 
+  function pushEntityScenesView() {
+    var view = getEntitySceneView();
+
+    Ui.pushView(
+      view[0],
+      view[1],
+      Ui.SLIDE_IMMEDIATE
+    );
+  }
+
   function switchEntityView() {
     var view = getEntityView();
 
