@@ -19,5 +19,6 @@
         <bitmap id="ScriptOff" filename="script_off.png" />
         <bitmap id="Unknown" filename="unknown.png" />
         <bitmap id="SmileySad" filename="smiley_sad.png" />
+        <bitmap id="Button" filename="button.png" />
     </drawables>
 </resources>
