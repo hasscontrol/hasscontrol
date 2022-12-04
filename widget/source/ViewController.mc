@@ -58,7 +58,8 @@ class ViewController {
         Hass.TYPE_LOCK,
         Hass.TYPE_COVER,
         Hass.TYPE_BINARY_SENSOR,
-        Hass.TYPE_INPUT_BOOLEAN
+        Hass.TYPE_INPUT_BOOLEAN,
+        Hass.TYPE_BUTTON
       ]
     );
 

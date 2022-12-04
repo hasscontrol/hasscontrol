@@ -277,7 +277,7 @@ module Hass {
       if (entity != null) {
         var newState = data[:context][:state];
 
-        if (entity.getType() == Entity.TYPE_SCRIPT) {
+        if (entity.getType() == Entity.TYPE_SCRIPT || entity.getType() == Entity.TYPE_BUTTON) {
           newState = Entity.STATE_OFF;
         }
 
@@ -322,6 +322,9 @@ module Hass {
         action = Client.ENTITY_ACTION_OPEN_COVER;
         loadingText = "Opening";
       }
+    } else if (entity.getType() == Entity.TYPE_BUTTON) {
+      action = Client.ENTITY_ACTION_PRESS;
+      loadingText = "Pressing";
     } else {
       if (currentState == Entity.STATE_ON) {
         action = Client.ENTITY_ACTION_TURN_OFF;
@@ -349,6 +352,8 @@ module Hass {
       entityType = "cover";
     } else if (entity.getType() == Entity.TYPE_INPUT_BOOLEAN) {
       entityType = "input_boolean";
+    } else if (entity.getType() == Entity.TYPE_BUTTON) {
+      entityType = "button";
     }
 
     App.getApp().viewController.showLoader(loadingText);
