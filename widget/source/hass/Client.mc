@@ -15,7 +15,8 @@ module Hass {
             ENTITY_ACTION_LOCK,
             ENTITY_ACTION_UNLOCK,
             ENTITY_ACTION_CLOSE_COVER,
-            ENTITY_ACTION_OPEN_COVER
+            ENTITY_ACTION_OPEN_COVER,
+            ENTITY_ACTION_PRESS
         }
 
         hidden var _baseUrl;
@@ -153,6 +154,9 @@ module Hass {
             } else if (action == Client.ENTITY_ACTION_UNLOCK) {
                 serviceAction = "unlock";
                 newState = "unlocked";
+            } else if (action == Client.ENTITY_ACTION_PRESS) {
+                serviceAction = "press";
+                newState = "timestamp"; // button doesn't have a real state - the state is the time stamp of it's last triggering
             }
 
             makeAuthenticatedWebRequest(
