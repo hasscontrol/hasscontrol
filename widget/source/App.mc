@@ -89,7 +89,7 @@ class HassControlApp extends App.AppBase {
         HassControlApp.SCENES_VIEW
       );
     } else {
-      throw new InvalidValueException();
+      throw new Toybox.Lang.InvalidValueException();
     }
   }
 

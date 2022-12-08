@@ -132,7 +132,7 @@ module Hass {
         && newState != STATE_OPEN
         && newState != STATE_UNKNOWN
       ) {
-        throw new InvalidValueException("state must be a valid Entity state");
+        throw new Toybox.Lang.InvalidValueException("state must be a valid Entity state");
       }
 
       _mState = newState;
