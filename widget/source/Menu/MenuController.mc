@@ -89,7 +89,7 @@ class MenuController {
     }
 
     function showSelectStartViewMenu() {
-        var menu = new WatchUi.Menu2({
+        var menu = new Ui.Menu2({
             :title => "Start view"
         });
 

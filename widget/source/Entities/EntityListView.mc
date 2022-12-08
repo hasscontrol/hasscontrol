@@ -40,7 +40,7 @@ class EntityListController {
 
   function setIndex(index) {
     if (!(index instanceof Number)) {
-      throw new InvalidValueException();
+      throw new Toybox.Lang.InvalidValueException();
     }
     _mIndex = index;
   }
